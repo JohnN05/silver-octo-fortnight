@@ -55,6 +55,34 @@ def get_upcoming_edm_events():
             # Check popularity threshold
             if score < config.POPULARITY_THRESHOLD:
                 continue
+
+            # Filter out non-EDM/Electronic performers (e.g. Pop artists like Kesha/Hilary Duff)
+            genres = primary_performer.get("genres", [])
+            primary_genre_slug = None
+            has_electronic_genre = False
+            
+            for g in genres:
+                slug = g.get("slug", "").lower()
+                is_primary = g.get("primary", False)
+                if slug in ["electronic", "techno", "house", "trance", "dubstep", "electro", "dance", "dj"]:
+                    has_electronic_genre = True
+                if is_primary:
+                    primary_genre_slug = slug
+            
+            # Exclude known non-EDM primary genres
+            NON_EDM_GENRES = {
+                'pop', 'rock', 'country', 'rap', 'hip-hop', 'r-b', 'indie', 'folk', 
+                'latin', 'jazz', 'classical', 'metal', 'reggae', 'soul', 'comedy', 
+                'alternative', 'rnb', 'singer-songwriter'
+            }
+            
+            if primary_genre_slug in NON_EDM_GENRES:
+                logger.info(f"Skipping performer '{primary_performer.get('name')}' - primary genre is '{primary_genre_slug}' (Non-EDM).")
+                continue
+                
+            if not has_electronic_genre:
+                logger.info(f"Skipping performer '{primary_performer.get('name')}' - no electronic/EDM genre tags found.")
+                continue
             
             # Get venue details
             venue = event.get("venue", {})
