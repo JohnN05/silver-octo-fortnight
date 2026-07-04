@@ -26,8 +26,9 @@ def evaluate_deal(event):
     Returns a dictionary of analysis results:
     - is_high_markup: boolean
     - markup_percentage: float
-    - value_rating: string ('HIGH', 'MEDIUM', 'LOW')
+    - value_rating: string
     - est_face_value: float
+    - using_national_avg: boolean
     """
     artist_score = event.get("artist_score", 0.0)
     
@@ -38,13 +39,20 @@ def evaluate_deal(event):
         
     # 2. Get best resale price available
     resale_price = event.get("resale_lowest")
+    using_national_avg = False
+    
     if not resale_price:
-        # If no lowest resale price, we cannot evaluate markup
+        resale_price = event.get("resale_national_avg")
+        if resale_price:
+            using_national_avg = True
+        
+    if not resale_price:
         return {
             "is_high_markup": False,
             "markup_percentage": 0.0,
-            "value_rating": "NEEDS CHECK",
-            "est_face_value": face_val
+            "value_rating": "NEEDS CHECK (No Resale Data)",
+            "est_face_value": face_val,
+            "using_national_avg": False
         }
     
     # 3. Calculate markup details
@@ -53,7 +61,6 @@ def evaluate_deal(event):
     is_high_markup = markup_ratio >= config.MARKUP_THRESHOLD
     
     # 4. Formulate overall rating
-    # Highly popular artist + high resale markup = HIGH value
     if artist_score >= 0.60 and is_high_markup:
         rating = "CRITICAL (High Demand & Markup)"
     elif is_high_markup:
@@ -67,5 +74,6 @@ def evaluate_deal(event):
         "is_high_markup": is_high_markup,
         "markup_percentage": round(markup_percent, 1),
         "value_rating": rating,
-        "est_face_value": face_val
+        "est_face_value": face_val,
+        "using_national_avg": using_national_avg
     }

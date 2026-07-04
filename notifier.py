@@ -71,7 +71,7 @@ def send_discord_notification(events_with_analysis):
     }
     embeds.append(title_embed)
 
-    for event, analysis in events_with_analysis[:8]:
+    for event, analysis in events_with_analysis[:5]:
         artist = event["artist"]
         venue = event["venue"]
         date_str = event["date"]
@@ -84,15 +84,18 @@ def send_discord_notification(events_with_analysis):
             formatted_date = date_str
 
         # Price comparison string
-        resale_lowest = event["resale_lowest"]
+        resale_lowest = event.get("resale_lowest")
+        resale_national = event.get("resale_national_avg")
         face_val = analysis["est_face_value"]
         markup = analysis["markup_percentage"]
         
         price_details = f"**Est. Face Value:** ${face_val:.2f}\n"
         if resale_lowest:
-            price_details += f"**Lowest Resale:** ${resale_lowest:.2f} *(+{markup}% markup)*\n"
+            price_details += f"**Lowest Local Resale:** ${resale_lowest:.2f} *(+{markup}% markup)*\n"
+        elif resale_national:
+            price_details += f"**Est. Resale (US Avg):** ${resale_national:.2f} *(+{markup}% markup - proxy)*\n"
         else:
-            price_details += "**Lowest Resale:** N/A (No secondary listings yet)\n"
+            price_details += "**Resale Market:** N/A (No secondary listings nationwide yet)\n"
 
         # Guess local presale codes
         guessed_codes = guess_presale_codes(venue)

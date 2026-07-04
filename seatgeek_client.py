@@ -109,6 +109,7 @@ def get_upcoming_edm_events():
                 "id": event.get("id"),
                 "title": event.get("title"),
                 "artist": primary_performer.get("name"),
+                "artist_id": primary_performer.get("id"),
                 "artist_score": score,
                 "date": event.get("datetime_local"),
                 "venue": f"{venue_name} ({venue_city}, {venue_state})",
@@ -129,6 +130,38 @@ def get_upcoming_edm_events():
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching data from SeatGeek: {e}")
         return []
+
+def get_performer_resale_average(artist_id):
+    """
+    Fetches up to 5 upcoming events nationwide for the given artist ID
+    and calculates the average lowest resale price as a value proxy.
+    """
+    if not artist_id:
+        return None
+    url = "https://api.seatgeek.com/2/events"
+    params = {
+        "client_id": config.SEATGEEK_CLIENT_ID,
+        "client_secret": config.SEATGEEK_CLIENT_SECRET,
+        "performers.id": artist_id,
+        "per_page": 5,
+    }
+    try:
+        response = requests.get(url, params=params, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        events = data.get("events", [])
+        
+        prices = []
+        for e in events:
+            lowest = e.get("stats", {}).get("lowest_price")
+            if lowest:
+                prices.append(lowest)
+                
+        if prices:
+            return round(sum(prices) / len(prices), 2)
+    except Exception as e:
+        logger.warning(f"Failed to fetch national resale average for performer {artist_id}: {e}")
+    return None
 
 if __name__ == "__main__":
     # Test client logic

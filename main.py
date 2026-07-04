@@ -91,21 +91,27 @@ def run_tracker(test_mode=False):
         notifier.send_discord_notification([])
         return True
 
-    # Evaluate each event
-    for event in events:
+    # Sort all events by artist score (popularity) descending to prioritize sold-out potential
+    events.sort(key=lambda x: x["artist_score"], reverse=True)
+    
+    # Select the top 5 most popular EDM artists
+    top_5_events = events[:5]
+    logger.info(f"Selecting top {len(top_5_events)} most popular artists for detailed pricing analysis.")
+
+    # Process and evaluate each of the top 5 events
+    for event in top_5_events:
+        # Fetch national resale average as a proxy when local resale lowest is N/A
+        logger.info(f"Fetching national resale price average for: {event['artist']}")
+        national_avg = seatgeek_client.get_performer_resale_average(event.get("artist_id"))
+        event["resale_national_avg"] = national_avg
+        
+        # Evaluate deal markup
         analysis = resale_checker.evaluate_deal(event)
         
         # Append StubHub Search link
         event["stubhub_url"] = stubhub_scraper.get_stubhub_search_url(event["artist"], "Washington DC")
         
-        # If it is high-value (high markup or highly popular EDM artist), include it
-        if analysis["is_high_markup"] or event["artist_score"] >= config.POPULARITY_THRESHOLD:
-            events_to_notify.append((event, analysis))
-
-    # Sort events by artist score (popularity) descending
-    events_to_notify.sort(key=lambda x: x[0]["artist_score"], reverse=True)
-    
-    logger.info(f"Found {len(events_to_notify)} matching events to notify.")
+        events_to_notify.append((event, analysis))
     
     # Send notification
     success = notifier.send_discord_notification(events_to_notify)
