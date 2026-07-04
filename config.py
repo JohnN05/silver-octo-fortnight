@@ -7,8 +7,9 @@ load_dotenv()
 # API Keys and Credentials
 SEATGEEK_CLIENT_ID = os.getenv("SEATGEEK_CLIENT_ID")
 SEATGEEK_CLIENT_SECRET = os.getenv("SEATGEEK_CLIENT_SECRET", "5b7411a35b0e703d05ce44facf0cb1e825d6b2fff858f19f96bb1cd4c5b5a2f1")
+TICKETMASTER_API_KEY = os.getenv("TICKETMASTER_API_KEY")
+STALE_THRESHOLD_DAYS = 7
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-
 # Location Settings (Default is Gaithersburg, MD)
 LATITUDE = float(os.getenv("LATITUDE", 39.1434))
 LONGITUDE = float(os.getenv("LONGITUDE", -77.2014))
