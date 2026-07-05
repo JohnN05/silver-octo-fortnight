@@ -22,7 +22,7 @@ def mock_ticketmaster_event_details(artist_name):
     return None
 
 def get_ticketmaster_event_details(artist_name, venue_city, test_mode=False):
-    if test_mode or not config.TICKETMASTER_API_KEY:
+    if test_mode or not getattr(config, 'TICKETMASTER_API_KEY', None):
         return mock_ticketmaster_event_details(artist_name)
     
     url = "https://app.ticketmaster.com/discovery/v2/events.json"
@@ -55,6 +55,6 @@ def get_ticketmaster_event_details(artist_name, venue_city, test_mode=False):
             "onsale_date": onsale_date,
             "ticketmaster_url": event.get("url")
         }
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         logger.error(f"Error querying Ticketmaster for {artist_name}: {e}")
         return None
