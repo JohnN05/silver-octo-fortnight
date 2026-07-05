@@ -1,4 +1,5 @@
 import sys
+import subprocess
 import logging
 import database
 import etl_pipeline
@@ -23,6 +24,21 @@ def run_tracker(test_mode=False):
         # Send alerts & build report
         notifier.send_discord_notification(events_to_notify)
         notifier.generate_markdown_report(events_to_notify)
+        notifier.generate_json_data(events_to_notify)
+        
+        # Auto-commit and push the data update (only if data.json changed)
+        try:
+            subprocess.run(["git", "add", "docs/data.json"], check=True)
+            diff_result = subprocess.run(["git", "diff", "--cached", "--quiet"])
+            if diff_result.returncode != 0:
+                subprocess.run(["git", "commit", "-m", "chore: update dashboard data [skip ci]"], check=True)
+                subprocess.run(["git", "push", "origin", "main"], check=True)
+                logger.info("Successfully pushed updated data.json to GitHub")
+            else:
+                logger.info("No changes to data.json — skipping commit and push")
+        except subprocess.CalledProcessError as e:
+            logger.warning(f"Git push failed: {e}")
+
         logger.info("ETL Tracker Execution successfully completed!")
         return True
     except Exception as e:

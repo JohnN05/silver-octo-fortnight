@@ -1,4 +1,5 @@
 import os
+import json
 import requests
 import logging
 from datetime import datetime
@@ -30,7 +31,7 @@ def send_discord_notification(events_with_analysis):
         
         # Clean concise details
         price_details = f"Est. Face Value: ${event['face_value']:.2f}\n"
-        est_resale = event['face_value'] * (1 + event.get('avg_past_markup', 0))
+        est_resale = event.get('resale_average') or event.get('resale_lowest') or event['face_value']
         price_details += f"Estimated Resale Value: ${est_resale:.2f}"
             
         color = 0xE74C3C if analysis["rating"] == "CRITICAL" else 0x3498DB
@@ -44,6 +45,16 @@ def send_discord_notification(events_with_analysis):
             "description": f"{price_details}\n[Buy Ticket]({event['url']}) | [StubHub Search]({sh_link})"
         }
         embeds.append(event_embed)
+        
+    # Add a final embed linking to the dashboard (only when event embeds were added)
+    if len(embeds) > 1:
+        dashboard_url = "https://JohnN05.github.io/silver-octo-fortnight/"
+        embeds.append({
+            "title": "📊 View Full Pricing Dashboard",
+            "url": dashboard_url,
+            "description": "Click here to view the full analysis dashboard.",
+            "color": 0x2C3E50
+        })
         
     payload = {"embeds": embeds}
     try:
@@ -72,3 +83,25 @@ def generate_markdown_report(events_with_analysis):
         f.write(md)
         
     return md
+
+def generate_json_data(events_with_analysis):
+    os.makedirs("docs", exist_ok=True)
+    json_path = "docs/data.json"
+    
+    data = []
+    for event, analysis in events_with_analysis:
+        event_copy = event.copy()
+        event_copy["analysis_rating"] = analysis["rating"]
+        event_copy["analysis_roi"] = analysis["roi"]
+        
+        # Calculate estimated resale from actual resale data (avg_past_markup is not populated by ETL)
+        est_resale = event.get('resale_average') or event.get('resale_lowest') or event['face_value']
+        event_copy["estimated_resale"] = est_resale
+        
+        data.append(event_copy)
+        
+    with open(json_path, "w") as f:
+        json.dump({"last_updated": datetime.now().isoformat(), "events": data}, f, indent=4)
+        
+    logger.info(f"Exported {len(data)} events to {json_path}")
+    return json_path

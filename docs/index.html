@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decibel Dispatch // EDM Ticket Valuation</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <h1>DECIBEL DISPATCH</h1>
+                <span class="sub-brand">// EDM TICKET VALUATION ENGINE</span>
+            </div>
+            <div class="meta-status">
+                <span id="last-updated">Last scan: Loading...</span>
+                <span id="global-stats">Stats: Loading...</span>
+            </div>
+        </header>
+
+        <section class="controls">
+            <div class="filter-group">
+                <span class="control-label">Venue:</span>
+                <div class="filter-buttons" id="venue-filters">
+                    <button class="filter-btn active" data-venue="all">All</button>
+                </div>
+            </div>
+            <div class="filter-group">
+                <span class="control-label">Sort By:</span>
+                <div class="filter-buttons" id="sort-filters">
+                    <button class="filter-btn active" data-sort="roi">ROI %</button>
+                    <button class="filter-btn" data-sort="date">Date</button>
+                    <button class="filter-btn" data-sort="popularity">Artist Popularity</button>
+                </div>
+            </div>
+        </section>
+
+        <main>
+            <div class="table-container">
+                <table class="valuation-table">
+                    <thead>
+                        <tr>
+                            <th align="left">Event / Artist</th>
+                            <th align="left">Venue</th>
+                            <th align="left">Date</th>
+                            <th align="right">Face Value</th>
+                            <th align="right">Lowest Resale</th>
+                            <th align="right">ROI Potential</th>
+                            <th align="center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="event-rows">
+                        <tr>
+                            <td colspan="7" align="center" class="loading-state">Loading analysis data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
