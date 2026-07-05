@@ -7,7 +7,7 @@ import config
 from datetime import datetime, timedelta, timezone
 import logging
 
-def run_daily_etl(conn):
+def run_daily_etl(conn, test_mode=False):
     # 1. Fetch upcoming events near location
     upcoming = seatgeek_client.get_upcoming_edm_events()
     

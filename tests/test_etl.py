@@ -17,45 +17,51 @@ def db_conn():
     if os.path.exists(db_name):
         os.remove(db_name)
 
-@patch("etl_pipeline.seatgeek_client.get_upcoming_edm_events")
-@patch("etl_pipeline.ticketmaster_client.get_ticketmaster_event_details")
-@patch("etl_pipeline.stubhub_scraper.scrape_stubhub_resale_price")
-@patch("etl_pipeline.bootstrap_performer_history")
-def test_etl_lazy_loading(mock_bootstrap, mock_stubhub, mock_tm, mock_sg, db_conn):
-    # Verify that when etl runs on a new performer, it populates historical shows
-    mock_sg.return_value = [
-        {
-            "id": 12345,
-            "title": "Fred again.. @ The Anthem",
-            "artist": "Fred again..",
-            "artist_id": 11111,
-            "artist_score": 0.89,
-            "date": "2026-09-02T20:00:00",
-            "venue_name": "The Anthem",
-            "venue_city": "Washington",
-            "venue_state": "DC",
-            "url": "https://seatgeek.com/fred-again-tickets"
-        }
-    ]
-    mock_tm.return_value = {"face_value_min": 50.0, "onsale_date": "2026-01-01", "ticketmaster_url": "url"}
-    mock_stubhub.return_value = 100.0
-    
-    def mock_bootstrap_impl(conn, performer_id, artist_name, score):
-        perf_dict = {
-            "id": performer_id,
-            "name": artist_name,
-            "popularity_score": score,
-            "avg_past_markup": 120.0,
-            "demand_rating": "HIGH"
-        }
-        database.save_performer(conn, perf_dict)
-        shows = [
-            {"performer_id": performer_id, "venue_name": "Space Miami", "venue_capacity": 2500, "date": "2026-01-20", "face_value": 50.0, "peak_resale": 135.0, "sell_out_days": 2.0}
+@pytest.fixture
+def default_mocks():
+    with patch("etl_pipeline.seatgeek_client.get_upcoming_edm_events") as mock_sg, \
+         patch("etl_pipeline.ticketmaster_client.get_ticketmaster_event_details") as mock_tm, \
+         patch("etl_pipeline.stubhub_scraper.scrape_stubhub_resale_price") as mock_stubhub, \
+         patch("etl_pipeline.bootstrap_performer_history") as mock_bootstrap:
+        
+        mock_sg.return_value = [
+            {
+                "id": 12345,
+                "title": "Fred again.. @ The Anthem",
+                "artist": "Fred again..",
+                "artist_id": 11111,
+                "artist_score": 0.89,
+                "date": "2026-09-02T20:00:00",
+                "venue_name": "The Anthem",
+                "venue_city": "Washington",
+                "venue_state": "DC",
+                "url": "https://seatgeek.com/fred-again-tickets"
+            }
         ]
-        for s in shows:
-            database.save_historical_show(conn, s)
-            
-    mock_bootstrap.side_effect = mock_bootstrap_impl
+        mock_tm.return_value = {"face_value_min": 50.0, "onsale_date": "2026-01-01", "ticketmaster_url": "url"}
+        mock_stubhub.return_value = 100.0
+        
+        def mock_bootstrap_impl(conn, performer_id, artist_name, score):
+            perf_dict = {
+                "id": performer_id,
+                "name": artist_name,
+                "popularity_score": score,
+                "avg_past_markup": 120.0,
+                "demand_rating": "HIGH"
+            }
+            database.save_performer(conn, perf_dict)
+            shows = [
+                {"performer_id": performer_id, "venue_name": "Space Miami", "venue_capacity": 2500, "date": "2026-01-20", "face_value": 50.0, "peak_resale": 135.0, "sell_out_days": 2.0}
+            ]
+            for s in shows:
+                database.save_historical_show(conn, s)
+                
+        mock_bootstrap.side_effect = mock_bootstrap_impl
+        
+        yield mock_bootstrap, mock_stubhub, mock_tm, mock_sg
+
+def test_etl_lazy_loading(default_mocks, db_conn):
+    mock_bootstrap, mock_stubhub, mock_tm, mock_sg = default_mocks
 
     # Check clean database has no performers
     res = database.get_performer(db_conn, 11111)
@@ -70,27 +76,8 @@ def test_etl_lazy_loading(mock_bootstrap, mock_stubhub, mock_tm, mock_sg, db_con
     assert len(database.get_historical_shows(db_conn, 11111)) > 0
 
 
-@patch("etl_pipeline.seatgeek_client.get_upcoming_edm_events")
-@patch("etl_pipeline.ticketmaster_client.get_ticketmaster_event_details")
-@patch("etl_pipeline.stubhub_scraper.scrape_stubhub_resale_price")
-@patch("etl_pipeline.bootstrap_performer_history")
-def test_etl_fresh_cache(mock_bootstrap, mock_stubhub, mock_tm, mock_sg, db_conn):
-    mock_sg.return_value = [
-        {
-            "id": 12345,
-            "title": "Fred again.. @ The Anthem",
-            "artist": "Fred again..",
-            "artist_id": 11111,
-            "artist_score": 0.89,
-            "date": "2026-09-02T20:00:00",
-            "venue_name": "The Anthem",
-            "venue_city": "Washington",
-            "venue_state": "DC",
-            "url": "https://seatgeek.com/fred-again-tickets"
-        }
-    ]
-    mock_tm.return_value = {"face_value_min": 50.0, "onsale_date": "2026-01-01", "ticketmaster_url": "url"}
-    mock_stubhub.return_value = 100.0
+def test_etl_fresh_cache(default_mocks, db_conn):
+    mock_bootstrap, mock_stubhub, mock_tm, mock_sg = default_mocks
     
     # Add a fresh performer
     now = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
@@ -111,44 +98,8 @@ def test_etl_fresh_cache(mock_bootstrap, mock_stubhub, mock_tm, mock_sg, db_conn
     assert len(shows) == 0  # No new shows added
     mock_bootstrap.assert_not_called()
 
-@patch("etl_pipeline.seatgeek_client.get_upcoming_edm_events")
-@patch("etl_pipeline.ticketmaster_client.get_ticketmaster_event_details")
-@patch("etl_pipeline.stubhub_scraper.scrape_stubhub_resale_price")
-@patch("etl_pipeline.bootstrap_performer_history")
-def test_etl_stale_cache(mock_bootstrap, mock_stubhub, mock_tm, mock_sg, db_conn):
-    mock_sg.return_value = [
-        {
-            "id": 12345,
-            "title": "Fred again.. @ The Anthem",
-            "artist": "Fred again..",
-            "artist_id": 11111,
-            "artist_score": 0.89,
-            "date": "2026-09-02T20:00:00",
-            "venue_name": "The Anthem",
-            "venue_city": "Washington",
-            "venue_state": "DC",
-            "url": "https://seatgeek.com/fred-again-tickets"
-        }
-    ]
-    mock_tm.return_value = {"face_value_min": 50.0, "onsale_date": "2026-01-01", "ticketmaster_url": "url"}
-    mock_stubhub.return_value = 100.0
-    
-    def mock_bootstrap_impl(conn, performer_id, artist_name, score):
-        perf_dict = {
-            "id": performer_id,
-            "name": artist_name,
-            "popularity_score": score,
-            "avg_past_markup": 120.0,
-            "demand_rating": "HIGH"
-        }
-        database.save_performer(conn, perf_dict)
-        shows = [
-            {"performer_id": performer_id, "venue_name": "Space Miami", "venue_capacity": 2500, "date": "2026-01-20", "face_value": 50.0, "peak_resale": 135.0, "sell_out_days": 2.0}
-        ]
-        for s in shows:
-            database.save_historical_show(conn, s)
-            
-    mock_bootstrap.side_effect = mock_bootstrap_impl
+def test_etl_stale_cache(default_mocks, db_conn):
+    mock_bootstrap, mock_stubhub, mock_tm, mock_sg = default_mocks
     
     # Add a stale performer
     stale_date = datetime.datetime.now(timezone.utc) - datetime.timedelta(days=config.STALE_THRESHOLD_DAYS + 2)

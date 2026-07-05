@@ -86,3 +86,24 @@ tests/test_etl.py::test_etl_stale_cache PASSED                           [100%]
 
 ============================== 3 passed in 0.25s ==============================
 ```
+
+
+### Fixes
+
+* \tl_pipeline.py\: Added \	est_mode=False\ default argument to un_daily_etl\ function signature to conform to the brief.
+* \	ests/test_etl.py\: Extracted duplicate shared mock configurations and implementation for \mock_sg\, \mock_tm\, \mock_stubhub\, and \mock_bootstrap_impl\ into a reusable pytest fixture named \default_mocks\. Tests \	est_etl_lazy_loading\, \	est_etl_fresh_cache\, and \	est_etl_stale_cache\ have been refactored to use this fixture.
+
+### Test Results
+
+Command: \python -m pytest tests/test_etl.py
+Output:
+\============================= test session starts =============================
+platform win32 -- Python 3.12.6, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\johnn\Desktop\gemini\edm_ticket_tracker
+plugins: anyio-4.8.0, Faker-40.21.0, requests-mock-1.12.1
+collected 3 items
+
+tests\test_etl.py ...                                                    [100%]
+
+============================== 3 passed in 0.22s ==============================
+\
