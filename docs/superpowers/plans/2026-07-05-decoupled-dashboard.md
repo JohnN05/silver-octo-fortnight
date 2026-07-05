@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Must run smoothly on a Raspberry Pi 3 (no heavy Node.js build steps, just raw static files and python).
-- The web app must use a premium, modern design (dark mode, glassmorphism, gradients).
+- The web app must use a sleek, ultra-minimalist design (matte charcoal background, no glows or gradients, hairline rule borders, clean typography, and amplifier LED-style status dots).
 - The GitHub Pages URL is expected to be `https://JohnN05.github.io/silver-octo-fortnight/` (assuming serving from `/docs` directory on the `main` branch).
 
 ---
