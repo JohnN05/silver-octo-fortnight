@@ -63,7 +63,7 @@ def calculate_event_velocity(conn, event_id):
         t_latest = datetime.fromisoformat(str(time_latest).replace("Z", "+00:00"))
         t_prev = datetime.fromisoformat(str(time_prev).replace("Z", "+00:00"))
         time_diff = (t_latest - t_prev).total_seconds()
-    except Exception:
+    except (ValueError, TypeError):
         time_diff = 86400.0
         
     if time_diff <= 0:
