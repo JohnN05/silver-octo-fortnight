@@ -1,6 +1,5 @@
 import os
 import requests
-import json
 import logging
 from datetime import datetime
 import config
@@ -28,14 +27,11 @@ def send_discord_notification(events_with_analysis):
     for event, analysis in events_with_analysis[:5]:
         artist = event["artist"]
         venue = event["venue"]
-        date_str = event["date"]
         
         # Clean concise details
         price_details = f"Est. Face Value: ${event['face_value']:.2f}\n"
-        if event.get("resale_lowest"):
-            price_details += f"Lowest Resale: ${event['resale_lowest']:.2f}"
-        else:
-            price_details += "Resale Market: N/A"
+        est_resale = event['face_value'] * (1 + event.get('avg_past_markup', 0))
+        price_details += f"Estimated Resale Value: ${est_resale:.2f}"
             
         color = 0xE74C3C if analysis["rating"] == "CRITICAL" else 0x3498DB
         
@@ -50,8 +46,12 @@ def send_discord_notification(events_with_analysis):
         embeds.append(event_embed)
         
     payload = {"embeds": embeds}
-    response = requests.post(config.DISCORD_WEBHOOK_URL, json=payload, timeout=10)
-    return response.status_code == 204 or response.status_code == 200
+    try:
+        response = requests.post(config.DISCORD_WEBHOOK_URL, json=payload, timeout=10)
+        return response.status_code == 204 or response.status_code == 200
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Network error sending Discord notification: {e}")
+        return False
 
 def generate_markdown_report(events_with_analysis):
     os.makedirs("docs/reports", exist_ok=True)

@@ -80,7 +80,7 @@ def test_discord_notification_empty_events(requests_mock):
     assert success is True
     assert not requests_mock.called
 
-def test_discord_notification_no_resale(requests_mock):
+def test_discord_notification_est_resale(requests_mock):
     config.DISCORD_WEBHOOK_URL = "http://test-webhook.com"
     requests_mock.post("http://test-webhook.com", status_code=200)
     
@@ -89,6 +89,7 @@ def test_discord_notification_no_resale(requests_mock):
         "venue": "The Anthem",
         "date": "2026-09-02T20:00:00",
         "face_value": 75.0,
+        "avg_past_markup": 1.5,
         "url": "https://seatgeek.com/fred-again",
         "venue_city": "Washington"
     }
@@ -102,4 +103,25 @@ def test_discord_notification_no_resale(requests_mock):
     assert success is True
     assert requests_mock.called
     history = requests_mock.request_history
-    assert "Resale Market: N/A" in history[0].json()["embeds"][1]["description"]
+    assert "Estimated Resale Value: $187.50" in history[0].json()["embeds"][1]["description"]
+
+def test_discord_notification_network_failure(requests_mock):
+    import requests
+    config.DISCORD_WEBHOOK_URL = "http://test-webhook.com"
+    requests_mock.post("http://test-webhook.com", exc=requests.exceptions.RequestException("Network down"))
+    
+    event = {
+        "artist": "Fred again..",
+        "venue": "The Anthem",
+        "face_value": 75.0,
+        "url": "https://seatgeek.com/fred-again"
+    }
+    analysis = {
+        "priority_score": 85.0,
+        "rating": "CRITICAL",
+        "roi": 149.0
+    }
+    
+    success = notifier.send_discord_notification([(event, analysis)])
+    assert success is False
+    assert requests_mock.called
