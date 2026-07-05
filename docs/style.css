@@ -192,6 +192,10 @@ header {
     color: var(--alert-red);
 }
 
+.roi-value {
+    font-weight: 600;
+}
+
 /* Action buttons */
 .action-cell {
     display: flex;
