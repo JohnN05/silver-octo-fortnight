@@ -4,20 +4,27 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def estimate_face_value(artist_score):
+def estimate_face_value(artist_score, venue_capacity=None):
     """
-    Estimates the original direct-from-artist ticket face value based on artist popularity.
-    This acts as a fallback when the actual face value is not available in the API.
-    - Low popularity (<0.45): ~$25 - $35 (Typical club tier)
-    - Medium popularity (0.45 - 0.65): ~$35 - $60 (Major club / medium concert hall)
-    - High popularity (>0.65): ~$60 - $95+ (Large music hall / arena)
+    Estimates ticket face value based on artist score and venue capacity.
     """
+    # Set base price based on score
     if artist_score < 0.45:
-        return 30.0
+        base_price = 30.0
     elif artist_score < 0.65:
-        return 45.0
+        base_price = 45.0
     else:
-        return 75.0
+        base_price = 75.0
+        
+    # Adjust price for venue capacity tier
+    if venue_capacity and venue_capacity > 10000:
+        # Arena premium
+        base_price += 15.0
+    elif venue_capacity and venue_capacity <= 3000:
+        # Club discount
+        base_price = max(base_price - 5.0, 25.0)
+        
+    return base_price
 
 def evaluate_deal(event):
     """
@@ -31,11 +38,12 @@ def evaluate_deal(event):
     - using_national_avg: boolean
     """
     artist_score = event.get("artist_score", 0.0)
+    venue_capacity = event.get("venue_capacity")
     
     # 1. Determine Face Value
     face_val = event.get("face_value")
     if not face_val:
-        face_val = estimate_face_value(artist_score)
+        face_val = estimate_face_value(artist_score, venue_capacity)
         
     # 2. Get best resale price available
     resale_price = event.get("resale_lowest")
