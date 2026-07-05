@@ -1,4 +1,5 @@
 import os
+import json
 import requests
 import logging
 from datetime import datetime
@@ -72,3 +73,25 @@ def generate_markdown_report(events_with_analysis):
         f.write(md)
         
     return md
+
+def generate_json_data(events_with_analysis):
+    os.makedirs("docs", exist_ok=True)
+    json_path = "docs/data.json"
+    
+    data = []
+    for event, analysis in events_with_analysis:
+        event_copy = event.copy()
+        event_copy["analysis_rating"] = analysis["rating"]
+        event_copy["analysis_roi"] = analysis["roi"]
+        
+        # Calculate estimated resale
+        est_resale = event['face_value'] * (1 + event.get('avg_past_markup', 0))
+        event_copy["estimated_resale"] = est_resale
+        
+        data.append(event_copy)
+        
+    with open(json_path, "w") as f:
+        json.dump({"last_updated": datetime.now().isoformat(), "events": data}, f, indent=4)
+        
+    logger.info(f"Exported {len(data)} events to {json_path}")
+    return json_path
