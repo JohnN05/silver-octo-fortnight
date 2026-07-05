@@ -46,6 +46,15 @@ def send_discord_notification(events_with_analysis):
         }
         embeds.append(event_embed)
         
+    # Add a final embed linking to the dashboard
+    dashboard_url = "https://JohnN05.github.io/silver-octo-fortnight/"
+    embeds.append({
+        "title": "📊 View Full Pricing Dashboard",
+        "url": dashboard_url,
+        "description": "Click here to view interactive charts, analysis, and more details on any device.",
+        "color": 0x2C3E50
+    })
+        
     payload = {"embeds": embeds}
     try:
         response = requests.post(config.DISCORD_WEBHOOK_URL, json=payload, timeout=10)
