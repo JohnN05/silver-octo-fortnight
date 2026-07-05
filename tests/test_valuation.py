@@ -134,3 +134,14 @@ def test_calculate_priority_score():
     assert updated_event["velocity"] == 50.0
     assert updated_event["priority_score"] > 0
     assert updated_event["rating"] in ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+
+def test_estimate_face_value():
+    assert valuation_engine.estimate_face_value(0.9) == 75.0
+    assert valuation_engine.estimate_face_value(0.7) == 55.0
+    assert valuation_engine.estimate_face_value(0.5) == 40.0
+    
+def test_estimate_face_value_with_capacity():
+    assert valuation_engine.estimate_face_value(0.9, 400) == 65.0
+    assert valuation_engine.estimate_face_value(0.9, 1000) == 75.0
+    assert valuation_engine.estimate_face_value(0.5, 300) == 30.0
+

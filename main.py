@@ -35,4 +35,32 @@ def run_tracker(test_mode=False):
 if __name__ == "__main__":
     # Check if user passed '--test' flag
     is_test = len(sys.argv) > 1 and sys.argv[1] == "--test"
-    run_tracker(test_mode=is_test)
+    if is_test:
+        from unittest.mock import patch
+        
+        test_events = [
+            {
+                "id": 22222,
+                "title": "Fred again..",
+                "artist": "Fred again..",
+                "artist_id": 99999,
+                "artist_score": 0.89,
+                "date": "2026-09-02T20:00:00",
+                "venue": "The Anthem (Washington, DC)",
+                "venue_name": "The Anthem",
+                "venue_city": "Washington",
+                "venue_state": "DC",
+                "url": "https://seatgeek.com/fred-again-tickets",
+                "resale_lowest": 190.0,
+                "resale_highest": 400.0,
+                "resale_average": 220.0,
+                "resale_count": 89,
+                "face_value": 75.0,
+                "venue_capacity": 6000,
+            }
+        ]
+        
+        with patch("seatgeek_client.get_upcoming_edm_events", return_value=test_events):
+            run_tracker(test_mode=is_test)
+    else:
+        run_tracker(test_mode=is_test)

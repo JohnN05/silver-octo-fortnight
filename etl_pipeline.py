@@ -9,29 +9,7 @@ import logging
 
 def run_daily_etl(conn, test_mode=False):
     # 1. Fetch upcoming events near location
-    if test_mode:
-        upcoming = [
-            {
-                "id": 22222,
-                "title": "Fred again..",
-                "artist": "Fred again..",
-                "artist_id": 99999,
-                "artist_score": 0.89,
-                "date": "2026-09-02T20:00:00",
-                "venue": "The Anthem (Washington, DC)",
-                "venue_name": "The Anthem",
-                "venue_city": "Washington",
-                "venue_state": "DC",
-                "url": "https://seatgeek.com/fred-again-tickets",
-                "resale_lowest": 190.0,
-                "resale_highest": 400.0,
-                "resale_average": 220.0,
-                "resale_count": 89,
-                "face_value": 75.0,
-            }
-        ]
-    else:
-        upcoming = seatgeek_client.get_upcoming_edm_events()
+    upcoming = seatgeek_client.get_upcoming_edm_events()
     
     results = []
     
@@ -62,7 +40,7 @@ def run_daily_etl(conn, test_mode=False):
         
             if not face_value:
                 # Fallback to SeatGeek face value estimation
-                face_value = event.get("face_value") or valuation_engine.estimate_face_value(event["artist_score"])
+                face_value = event.get("face_value") or valuation_engine.estimate_face_value(event["artist_score"], event.get("venue_capacity"))
                 
             event["face_value"] = face_value
             event["onsale_date"] = onsale_date
