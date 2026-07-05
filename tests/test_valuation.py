@@ -105,3 +105,32 @@ def test_calculate_event_velocity_zero_prev():
     
     velocity = valuation_engine.calculate_event_velocity(conn, 'E1')
     assert velocity == 0.0
+
+def test_calculate_event_velocity_sold_out():
+    conn = setup_db()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO inventory_logs (event_id, ticket_count, check_time) VALUES ('E1', 100, '2023-01-01T10:00:00Z')")
+    cursor.execute("INSERT INTO inventory_logs (event_id, ticket_count, check_time) VALUES ('E1', 0, '2023-01-02T10:00:00Z')")
+    conn.commit()
+    
+    velocity = valuation_engine.calculate_event_velocity(conn, 'E1')
+    assert velocity == 100.0
+
+def test_calculate_priority_score():
+    conn = setup_db()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO inventory_logs (event_id, ticket_count, check_time) VALUES ('E1', 100, '2023-01-01T10:00:00Z')")
+    cursor.execute("INSERT INTO inventory_logs (event_id, ticket_count, check_time) VALUES ('E1', 50, '2023-01-02T10:00:00Z')")
+    conn.commit()
+    
+    event = {
+        "event_id": "E1",
+        "face_value": 50.0,
+        "resale_lowest": 150.0,
+        "avg_past_markup": 120.0,
+        "sell_out_days": 1.0
+    }
+    updated_event = valuation_engine.calculate_priority_score(conn, event)
+    assert updated_event["velocity"] == 50.0
+    assert updated_event["priority_score"] > 0
+    assert updated_event["rating"] in ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
