@@ -4,7 +4,7 @@ import config
 
 logger = logging.getLogger(__name__)
 
-def mock_ticketmaster_event_details(artist_name):
+def mock_ticketmaster_event_details(artist_name: str) -> dict:
     if "Fred again" in artist_name:
         return {
             "face_value_min": 75.0,
@@ -21,7 +21,7 @@ def mock_ticketmaster_event_details(artist_name):
         }
     return None
 
-def get_ticketmaster_event_details(artist_name, venue_city, test_mode=False):
+def get_ticketmaster_event_details(artist_name: str, venue_city: str, test_mode=False) -> dict:
     if test_mode or not getattr(config, 'TICKETMASTER_API_KEY', None):
         return mock_ticketmaster_event_details(artist_name)
     
@@ -37,7 +37,7 @@ def get_ticketmaster_event_details(artist_name, venue_city, test_mode=False):
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
-        events = data.get("_embedded", {}).get("events", [])
+        events = (data.get("_embedded") or {}).get("events", [])
         if not events:
             return None
         
@@ -46,7 +46,7 @@ def get_ticketmaster_event_details(artist_name, venue_city, test_mode=False):
         face_min = price_ranges[0].get("min") if price_ranges else None
         face_max = price_ranges[0].get("max") if price_ranges else None
         
-        onsales = event.get("sales", {}).get("public", {})
+        onsales = (event.get("sales") or {}).get("public") or {}
         onsale_date = onsales.get("startDateTime")
         
         return {
@@ -55,6 +55,6 @@ def get_ticketmaster_event_details(artist_name, venue_city, test_mode=False):
             "onsale_date": onsale_date,
             "ticketmaster_url": event.get("url")
         }
-    except requests.exceptions.RequestException as e:
+    except (requests.exceptions.RequestException, ValueError) as e:
         logger.error(f"Error querying Ticketmaster for {artist_name}: {e}")
         return None

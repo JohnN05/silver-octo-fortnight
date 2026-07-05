@@ -65,3 +65,24 @@ tests\test_ticketmaster.py ....                                          [100%]
 
 ============================== 4 passed in 0.14s ==============================
 ```
+
+### Task 3 Fix Report
+**What I fixed:**
+- Fixed AttributeError when _embedded or sales properties are explicitly 
+ull in the Ticketmaster API response by using or {} fallback before .get().
+- Broadened exception handling to catch ValueError (which covers json.decoder.JSONDecodeError) to handle invalid JSON responses.
+- Added type hints for mock_ticketmaster_event_details(artist_name: str) -> dict and get_ticketmaster_event_details(artist_name: str, venue_city: str, test_mode=False) -> dict.
+
+**Test Command Run:**
+python -m pytest tests/test_ticketmaster.py
+
+**Full Test Output:**
+============================= test session starts =============================
+platform win32 -- Python 3.12.6, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\johnn\Desktop\gemini\edm_ticket_tracker
+plugins: anyio-4.8.0, Faker-40.21.0, requests-mock-1.12.1
+collected 4 items
+
+tests\test_ticketmaster.py ....                                          [100%]
+
+============================== 4 passed in 0.13s ==============================
