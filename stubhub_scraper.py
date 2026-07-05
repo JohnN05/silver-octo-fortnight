@@ -11,9 +11,13 @@ def get_stubhub_search_url(artist_name, venue_city=""):
     """
     Generates a clickable StubHub search URL for the user to check prices directly.
     """
-    query = f"{artist_name} {venue_city}".strip()
+    # Clean queries of special characters like dots that break searches
+    clean_artist = re.sub(r'[^\w\s-]', '', artist_name).strip()
+    clean_city = re.sub(r'[^\w\s-]', '', venue_city).strip() if venue_city else ""
+    
+    query = f"{clean_artist} {clean_city}".strip()
     encoded_query = urllib.parse.quote(query)
-    return f"https://www.stubhub.com/find/s/?q={encoded_query}"
+    return f"https://www.stubhub.com/secure/search?q={encoded_query}"
 
 def scrape_stubhub_resale_price(artist_name, venue_city=""):
     """
