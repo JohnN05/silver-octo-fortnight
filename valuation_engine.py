@@ -86,3 +86,13 @@ def calculate_priority_score(conn, event: dict) -> dict:
     score_data = compute_score(event)
     event.update(score_data)
     return event
+
+def estimate_face_value(artist_score: float) -> float:
+    # A simple estimation: higher popularity = higher face value
+    if artist_score > 0.8:
+        return 75.0
+    elif artist_score > 0.6:
+        return 55.0
+    else:
+        return 40.0
+
