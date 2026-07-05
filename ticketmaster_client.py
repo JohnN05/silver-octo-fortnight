@@ -42,7 +42,7 @@ def get_ticketmaster_event_details(artist_name, venue_city, test_mode=False):
             return None
         
         event = events[0]
-        price_ranges = event.get("priceRanges", [])
+        price_ranges = event.get("priceRanges") or []
         face_min = price_ranges[0].get("min") if price_ranges else None
         face_max = price_ranges[0].get("max") if price_ranges else None
         

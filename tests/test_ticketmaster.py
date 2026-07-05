@@ -10,9 +10,9 @@ def test_mock_ticketmaster_details():
     assert details["face_value_max"] == 95.0
     assert details["onsale_date"] == "2026-07-15T10:00:00"
 
+@patch('config.TICKETMASTER_API_KEY', 'test_key')
 @patch('ticketmaster_client.requests.get')
 def test_real_ticketmaster_happy_path(mock_get):
-    config.TICKETMASTER_API_KEY = "test_key"
     mock_response = mock_get.return_value
     mock_response.json.return_value = {
         "_embedded": {
@@ -35,9 +35,9 @@ def test_real_ticketmaster_happy_path(mock_get):
     
     mock_get.assert_called_once()
 
+@patch('config.TICKETMASTER_API_KEY', 'test_key')
 @patch('ticketmaster_client.requests.get')
 def test_real_ticketmaster_empty_response(mock_get):
-    config.TICKETMASTER_API_KEY = "test_key"
     mock_response = mock_get.return_value
     mock_response.json.return_value = {}  # No events found
     
@@ -45,9 +45,9 @@ def test_real_ticketmaster_empty_response(mock_get):
     assert details is None
     mock_get.assert_called_once()
 
+@patch('config.TICKETMASTER_API_KEY', 'test_key')
 @patch('ticketmaster_client.requests.get')
 def test_real_ticketmaster_error_state(mock_get):
-    config.TICKETMASTER_API_KEY = "test_key"
     mock_get.side_effect = requests.exceptions.RequestException("API Error")
     
     details = ticketmaster_client.get_ticketmaster_event_details("Artist", "City", test_mode=False)

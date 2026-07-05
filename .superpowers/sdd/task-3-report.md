@@ -41,3 +41,27 @@ tests\test_ticketmaster.py ....                                          [100%]
 
 ============================== 4 passed in 0.56s ==============================
 ```
+
+## Fix Report 2
+
+### What I fixed
+1. **test_ticketmaster.py**: Fixed the test state leak by replacing explicit `config.TICKETMASTER_API_KEY = "test_key"` assignments with `@patch('config.TICKETMASTER_API_KEY', 'test_key')` to properly clean up after tests.
+2. **ticketmaster_client.py**: Fixed the potential `TypeError` by updating `event.get("priceRanges", [])` to `event.get("priceRanges") or []`, safeguarding against explicit `null` values from the API.
+
+### Test Command
+```bash
+python -m pytest tests/test_ticketmaster.py
+```
+
+### Test Output
+```
+============================= test session starts =============================
+platform win32 -- Python 3.12.6, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\johnn\Desktop\gemini\edm_ticket_tracker
+plugins: anyio-4.8.0, Faker-40.21.0, requests-mock-1.12.1
+collected 4 items
+
+tests\test_ticketmaster.py ....                                          [100%]
+
+============================== 4 passed in 0.14s ==============================
+```
