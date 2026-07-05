@@ -1,0 +1,89 @@
+Commits:  
+fab4cbc feat: sanitize stubhub query terms and use secure search URL routing
+  
+Stat:  
+ stubhub_scraper.py    |  8 ++++++--
+ tests/test_stubhub.py | 40 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+), 2 deletions(-)
+  
+Diff:  
+diff --git a/stubhub_scraper.py b/stubhub_scraper.py
+index 9725fdd..5139b26 100644
+--- a/stubhub_scraper.py
++++ b/stubhub_scraper.py
+@@ -4,23 +4,27 @@ from bs4 import BeautifulSoup
+ import logging
+ import re
+ 
+ logging.basicConfig(level=logging.INFO)
+ logger = logging.getLogger(__name__)
+ 
+ def get_stubhub_search_url(artist_name, venue_city=""):
+     """
+     Generates a clickable StubHub search URL for the user to check prices directly.
+     """
+-    query = f"{artist_name} {venue_city}".strip()
++    # Clean queries of special characters like dots that break searches
++    clean_artist = re.sub(r'[^\w\s-]', '', artist_name).strip()
++    clean_city = re.sub(r'[^\w\s-]', '', venue_city).strip() if venue_city else ""
++    
++    query = f"{clean_artist} {clean_city}".strip()
+     encoded_query = urllib.parse.quote(query)
+-    return f"https://www.stubhub.com/find/s/?q={encoded_query}"
++    return f"https://www.stubhub.com/secure/search?q={encoded_query}"
+ 
+ def scrape_stubhub_resale_price(artist_name, venue_city=""):
+     """
+     Attempts to scrape StubHub search results for the lowest ticket price.
+     Uses browser headers, but falls back gracefully to None if blocked by Akamai/Cloudflare.
+     """
+     search_url = get_stubhub_search_url(artist_name, venue_city)
+     headers = {
+         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+diff --git a/tests/test_stubhub.py b/tests/test_stubhub.py
+new file mode 100644
+index 0000000..017d696
+--- /dev/null
++++ b/tests/test_stubhub.py
+@@ -0,0 +1,40 @@
++import stubhub_scraper
++import pytest
++import requests
++
++def test_stubhub_url_sanitization():
++    url = stubhub_scraper.get_stubhub_search_url("Fred again..", "Washington DC")
++    # Expect dots to be stripped and secure search path used
++    assert ".." not in url
++    assert "secure/search" in url
++    assert "Fred%20again" in url
++
++def test_scrape_stubhub_resale_price_initial_state(requests_mock):
++    url = stubhub_scraper.get_stubhub_search_url("Martin Garrix", "Washington DC")
++    requests_mock.get(url, text='<html><body><script>window.__INITIAL_STATE__ = {"minPrice": 85.50}</script></body></html>')
++    price = stubhub_scraper.scrape_stubhub_resale_price("Martin Garrix", "Washington DC")
++    assert price == 85.50
++
++def test_scrape_stubhub_resale_price_regex(requests_mock):
++    url = stubhub_scraper.get_stubhub_search_url("Martin Garrix", "Washington DC")
++    requests_mock.get(url, text='<html><body><div>Tickets from $90 and up</div></body></html>')
++    price = stubhub_scraper.scrape_stubhub_resale_price("Martin Garrix", "Washington DC")
++    assert price == 90.0
++
++def test_scrape_stubhub_resale_price_403(requests_mock):
++    url = stubhub_scraper.get_stubhub_search_url("Martin Garrix", "Washington DC")
++    requests_mock.get(url, status_code=403)
++    price = stubhub_scraper.scrape_stubhub_resale_price("Martin Garrix", "Washington DC")
++    assert price is None
++
++def test_scrape_stubhub_resale_price_non_200(requests_mock):
++    url = stubhub_scraper.get_stubhub_search_url("Martin Garrix", "Washington DC")
++    requests_mock.get(url, status_code=500)
++    price = stubhub_scraper.scrape_stubhub_resale_price("Martin Garrix", "Washington DC")
++    assert price is None
++
++def test_scrape_stubhub_resale_price_exception(requests_mock):
++    url = stubhub_scraper.get_stubhub_search_url("Martin Garrix", "Washington DC")
++    requests_mock.get(url, exc=requests.exceptions.ConnectTimeout)
++    price = stubhub_scraper.scrape_stubhub_resale_price("Martin Garrix", "Washington DC")
++    assert price is None

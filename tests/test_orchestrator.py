@@ -64,13 +64,24 @@ def test_get_or_update_performer_stale(mock_avg, mock_save, mock_get):
 @patch("orchestrator.get_or_update_performer")
 def test_process_event_tm_fallback(mock_get_perf, mock_save_event, mock_estimate, mock_tm):
     # Case 1: TM provides face value
-    mock_tm.return_value = {"face_value_min": 60.0, "ticketmaster_url": "tm_url", "onsale_date": "date"}
-    event = {"artist": "Artist", "artist_id": 1, "artist_score": 0.8, "venue_city": "DC"}
+    mock_tm.return_value = {"face_value_min": 60.0, "ticketmaster_url": "tm_url", "onsale_date": "2026-01-01"}
+    event = {"artist": "Artist", "artist_id": 1, "artist_score": 0.8, "venue_city": "DC", "date": "2026-02-01"}
     conn = MagicMock()
     
     result = orchestrator.process_event(conn, dict(event))
     assert result["face_value"] == 60.0
+    assert result["ticketmaster_url"] == "tm_url"
+    assert result["onsale_date"] == "2026-01-01"
     mock_estimate.assert_not_called()
+    
+    mock_save_event.assert_called_once()
+    saved_record = mock_save_event.call_args[0][1]
+    assert saved_record["ticketmaster_url"] == "tm_url"
+    assert saved_record["onsale_date"] == "2026-01-01"
+    assert saved_record["performer_id"] == 1
+    assert "id" in saved_record
+    
+    mock_save_event.reset_mock()
     
     # Case 2: TM does not provide face value
     mock_tm.return_value = {"ticketmaster_url": "tm_url"}

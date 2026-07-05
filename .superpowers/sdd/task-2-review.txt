@@ -1,0 +1,79 @@
+Commits:  
+61bd660 config: add ticketmaster api key and cache staleness config
+  
+Stat:  
+ config.py            |  3 ++-
+ requirements.txt     |  1 +
+ tests/test_config.py | 26 ++++++++++++++++++++++++++
+ 3 files changed, 29 insertions(+), 1 deletion(-)
+  
+Diff:  
+diff --git a/config.py b/config.py
+index a35c7b0..2ffbace 100644
+--- a/config.py
++++ b/config.py
+@@ -1,21 +1,22 @@
+ import os
+ from dotenv import load_dotenv
+ 
+ # Load environment variables from .env file
+ load_dotenv()
+ 
+ # API Keys and Credentials
+ SEATGEEK_CLIENT_ID = os.getenv("SEATGEEK_CLIENT_ID")
+ SEATGEEK_CLIENT_SECRET = os.getenv("SEATGEEK_CLIENT_SECRET", "5b7411a35b0e703d05ce44facf0cb1e825d6b2fff858f19f96bb1cd4c5b5a2f1")
++TICKETMASTER_API_KEY = os.getenv("TICKETMASTER_API_KEY")
++STALE_THRESHOLD_DAYS = 7
+ DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+-
+ # Location Settings (Default is Gaithersburg, MD)
+ LATITUDE = float(os.getenv("LATITUDE", 39.1434))
+ LONGITUDE = float(os.getenv("LONGITUDE", -77.2014))
+ RADIUS = os.getenv("RADIUS", "45mi")  # Covers DC & parts of Northern Virginia
+ 
+ # Value Thresholds
+ POPULARITY_THRESHOLD = float(os.getenv("POPULARITY_THRESHOLD", 0.40))  # Performer score (0.0 to 1.0)
+ MARKUP_THRESHOLD = float(os.getenv("MARKUP_THRESHOLD", 1.15))          # Resale / Face value ratio
+ 
+ def validate_config():
+diff --git a/requirements.txt b/requirements.txt
+index 656f14e..7dfd546 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -1,3 +1,4 @@
+ requests>=2.31.0
+ python-dotenv>=1.0.1
+ beautifulsoup4>=4.12.3
++pytest>=8.0.0
+diff --git a/tests/test_config.py b/tests/test_config.py
+new file mode 100644
+index 0000000..d593356
+--- /dev/null
++++ b/tests/test_config.py
+@@ -0,0 +1,26 @@
++import os
++import importlib
++from unittest import mock
++
++def test_config_variables_loaded():
++    with mock.patch.dict(os.environ, {
++        "TICKETMASTER_API_KEY": "test_tm_key",
++        "SEATGEEK_CLIENT_ID": "test_sg_id",
++        "DISCORD_WEBHOOK_URL": "http://test.url",
++    }):
++        import config
++        importlib.reload(config)
++        assert config.TICKETMASTER_API_KEY == "test_tm_key"
++        assert config.STALE_THRESHOLD_DAYS == 7
++
++def test_validate_config_no_ticketmaster_key():
++    with mock.patch.dict(os.environ, {
++        "SEATGEEK_CLIENT_ID": "test_sg_id",
++        "DISCORD_WEBHOOK_URL": "http://test.url",
++    }, clear=True):
++        import config
++        importlib.reload(config)
++        # Should not include TICKETMASTER_API_KEY as missing
++        missing = config.validate_config()
++        assert "TICKETMASTER_API_KEY" not in missing
++        assert len(missing) == 0

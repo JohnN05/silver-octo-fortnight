@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timezone
+import hashlib
 import database
 import config
 import seatgeek_client
@@ -57,6 +58,7 @@ def process_event(conn, event: Dict[str, Any], test_mode=False) -> Dict[str, Any
     venue_capacity = event.get("venue_capacity")
     
     if artist_id:
+        # Intentionally triggering cache update side-effect; ignoring return value
         get_or_update_performer(conn, artist_id, artist_name, artist_score)
         
     tm_details = ticketmaster_client.get_ticketmaster_event_details(artist_name, venue_city, test_mode=test_mode)
@@ -72,7 +74,7 @@ def process_event(conn, event: Dict[str, Any], test_mode=False) -> Dict[str, Any
     else:
         event["face_value"] = resale_checker.estimate_face_value(artist_score, venue_capacity)
         
-    event_id = event.get("id") or hash(f"{artist_name}_{event.get('date')}")
+    event_id = event.get("id") or hashlib.md5(f"{artist_name}_{event.get('date')}".encode()).hexdigest()
     
     event_record = {
         "id": event_id,

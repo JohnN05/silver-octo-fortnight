@@ -1,0 +1,234 @@
+Commits:  
+afc83fa Fix ticketmaster client JSON error handling and add type hints
+b998b18 Fix state leak in tests and safeguard against None priceRanges
+329885f Fix Task 3 issues: handle API requests gracefully and add tests
+a76945e feat: implement ticketmaster client with API lookup and mock mode
+  
+Stat:  
+ .superpowers/sdd/task-3-report.md | 88 +++++++++++++++++++++++++++++++++++++++
+ tests/test_ticketmaster.py        | 55 ++++++++++++++++++++++++
+ ticketmaster_client.py            | 60 ++++++++++++++++++++++++++
+ 3 files changed, 203 insertions(+)
+  
+Diff:  
+diff --git a/.superpowers/sdd/task-3-report.md b/.superpowers/sdd/task-3-report.md
+new file mode 100644
+index 0000000..7798c88
+--- /dev/null
++++ b/.superpowers/sdd/task-3-report.md
+@@ -0,0 +1,88 @@
++# Task 3 Report
++
++## What I implemented
++I implemented the test for the Ticketmaster client in `tests/test_ticketmaster.py` and the actual client in `ticketmaster_client.py` with mock and real lookup support, matching the provided task brief.
++
++## Test Results
++I was unable to run `pytest tests/test_ticketmaster.py -v` because the permission prompt for `pytest` timed out. Therefore, I cannot provide concrete TDD evidence from terminal output.
++
++## Files changed
++- `tests/test_ticketmaster.py` (Created)
++- `ticketmaster_client.py` (Created)
++
++## Self-review findings
++- The `ticketmaster_client.py` implementation exactly matches the code provided in the brief.
++- The `test_ticketmaster.py` implementation exactly matches the code provided in the brief.
++
++## Issues or concerns
++- I was unable to execute the tests due to a permission timeout.
++- I was unable to run git commit for the same reason.
++
++## Fix Report
++
++### What I fixed
++1. **test_ticketmaster.py**: Added tests for the real API logic using `unittest.mock.patch` to verify the happy path, empty responses, and error states of `get_ticketmaster_event_details`.
++2. **ticketmaster_client.py**: Changed the broad `except Exception` to `except requests.exceptions.RequestException`. Also updated `not config.TICKETMASTER_API_KEY` to `not getattr(config, 'TICKETMASTER_API_KEY', None)`.
++
++### Test Command
++```bash
++python -m pytest tests/test_ticketmaster.py
++```
++
++### Test Output
++```
++============================= test session starts =============================
++platform win32 -- Python 3.12.6, pytest-9.0.2, pluggy-1.6.0
++rootdir: C:\Users\johnn\Desktop\gemini\edm_ticket_tracker
++plugins: anyio-4.8.0, Faker-40.21.0, requests-mock-1.12.1
++collected 4 items
++
++tests\test_ticketmaster.py ....                                          [100%]
++
++============================== 4 passed in 0.56s ==============================
++```
++
++## Fix Report 2
++
++### What I fixed
++1. **test_ticketmaster.py**: Fixed the test state leak by replacing explicit `config.TICKETMASTER_API_KEY = "test_key"` assignments with `@patch('config.TICKETMASTER_API_KEY', 'test_key')` to properly clean up after tests.
++2. **ticketmaster_client.py**: Fixed the potential `TypeError` by updating `event.get("priceRanges", [])` to `event.get("priceRanges") or []`, safeguarding against explicit `null` values from the API.
++
++### Test Command
++```bash
++python -m pytest tests/test_ticketmaster.py
++```
++
++### Test Output
++```
++============================= test session starts =============================
++platform win32 -- Python 3.12.6, pytest-9.0.2, pluggy-1.6.0
++rootdir: C:\Users\johnn\Desktop\gemini\edm_ticket_tracker
++plugins: anyio-4.8.0, Faker-40.21.0, requests-mock-1.12.1
++collected 4 items
++
++tests\test_ticketmaster.py ....                                          [100%]
++
++============================== 4 passed in 0.14s ==============================
++```
++
++### Task 3 Fix Report
++**What I fixed:**
++- Fixed AttributeError when _embedded or sales properties are explicitly 
++ull in the Ticketmaster API response by using or {} fallback before .get().
++- Broadened exception handling to catch ValueError (which covers json.decoder.JSONDecodeError) to handle invalid JSON responses.
++- Added type hints for mock_ticketmaster_event_details(artist_name: str) -> dict and get_ticketmaster_event_details(artist_name: str, venue_city: str, test_mode=False) -> dict.
++
++**Test Command Run:**
++python -m pytest tests/test_ticketmaster.py
++
++**Full Test Output:**
++============================= test session starts =============================
++platform win32 -- Python 3.12.6, pytest-9.0.2, pluggy-1.6.0
++rootdir: C:\Users\johnn\Desktop\gemini\edm_ticket_tracker
++plugins: anyio-4.8.0, Faker-40.21.0, requests-mock-1.12.1
++collected 4 items
++
++tests\test_ticketmaster.py ....                                          [100%]
++
++============================== 4 passed in 0.13s ==============================
+diff --git a/tests/test_ticketmaster.py b/tests/test_ticketmaster.py
+new file mode 100644
+index 0000000..02158a5
+--- /dev/null
++++ b/tests/test_ticketmaster.py
+@@ -0,0 +1,55 @@
++import ticketmaster_client
++import config
++from unittest.mock import patch
++import requests
++
++def test_mock_ticketmaster_details():
++    details = ticketmaster_client.get_ticketmaster_event_details("Fred again..", "Washington", test_mode=True)
++    assert details is not None
++    assert details["face_value_min"] == 75.0
++    assert details["face_value_max"] == 95.0
++    assert details["onsale_date"] == "2026-07-15T10:00:00"
++
++@patch('config.TICKETMASTER_API_KEY', 'test_key')
++@patch('ticketmaster_client.requests.get')
++def test_real_ticketmaster_happy_path(mock_get):
++    mock_response = mock_get.return_value
++    mock_response.json.return_value = {
++        "_embedded": {
++            "events": [
++                {
++                    "priceRanges": [{"min": 50.0, "max": 100.0}],
++                    "sales": {"public": {"startDateTime": "2026-08-01T10:00:00Z"}},
++                    "url": "https://ticketmaster.com/event/123"
++                }
++            ]
++        }
++    }
++    
++    details = ticketmaster_client.get_ticketmaster_event_details("Artist", "City", test_mode=False)
++    assert details is not None
++    assert details["face_value_min"] == 50.0
++    assert details["face_value_max"] == 100.0
++    assert details["onsale_date"] == "2026-08-01T10:00:00Z"
++    assert details["ticketmaster_url"] == "https://ticketmaster.com/event/123"
++    
++    mock_get.assert_called_once()
++
++@patch('config.TICKETMASTER_API_KEY', 'test_key')
++@patch('ticketmaster_client.requests.get')
++def test_real_ticketmaster_empty_response(mock_get):
++    mock_response = mock_get.return_value
++    mock_response.json.return_value = {}  # No events found
++    
++    details = ticketmaster_client.get_ticketmaster_event_details("Artist", "City", test_mode=False)
++    assert details is None
++    mock_get.assert_called_once()
++
++@patch('config.TICKETMASTER_API_KEY', 'test_key')
++@patch('ticketmaster_client.requests.get')
++def test_real_ticketmaster_error_state(mock_get):
++    mock_get.side_effect = requests.exceptions.RequestException("API Error")
++    
++    details = ticketmaster_client.get_ticketmaster_event_details("Artist", "City", test_mode=False)
++    assert details is None
++    mock_get.assert_called_once()
+diff --git a/ticketmaster_client.py b/ticketmaster_client.py
+new file mode 100644
+index 0000000..715b289
+--- /dev/null
++++ b/ticketmaster_client.py
+@@ -0,0 +1,60 @@
++import requests
++import logging
++import config
++
++logger = logging.getLogger(__name__)
++
++def mock_ticketmaster_event_details(artist_name: str) -> dict:
++    if "Fred again" in artist_name:
++        return {
++            "face_value_min": 75.0,
++            "face_value_max": 95.0,
++            "onsale_date": "2026-07-15T10:00:00",
++            "ticketmaster_url": "https://www.ticketmaster.com/mock-fred-again"
++        }
++    elif "John Summit" in artist_name:
++        return {
++            "face_value_min": 45.0,
++            "face_value_max": 65.0,
++            "onsale_date": "2026-07-10T12:00:00",
++            "ticketmaster_url": "https://www.ticketmaster.com/mock-john-summit"
++        }
++    return None
++
++def get_ticketmaster_event_details(artist_name: str, venue_city: str, test_mode=False) -> dict:
++    if test_mode or not getattr(config, 'TICKETMASTER_API_KEY', None):
++        return mock_ticketmaster_event_details(artist_name)
++    
++    url = "https://app.ticketmaster.com/discovery/v2/events.json"
++    params = {
++        "apikey": config.TICKETMASTER_API_KEY,
++        "keyword": artist_name,
++        "city": venue_city,
++        "classificationName": "dance",
++        "size": 1
++    }
++    try:
++        response = requests.get(url, params=params, timeout=10)
++        response.raise_for_status()
++        data = response.json()
++        events = (data.get("_embedded") or {}).get("events", [])
++        if not events:
++            return None
++        
++        event = events[0]
++        price_ranges = event.get("priceRanges") or []
++        face_min = price_ranges[0].get("min") if price_ranges else None
++        face_max = price_ranges[0].get("max") if price_ranges else None
++        
++        onsales = (event.get("sales") or {}).get("public") or {}
++        onsale_date = onsales.get("startDateTime")
++        
++        return {
++            "face_value_min": face_min,
++            "face_value_max": face_max,
++            "onsale_date": onsale_date,
++            "ticketmaster_url": event.get("url")
++        }
++    except (requests.exceptions.RequestException, ValueError) as e:
++        logger.error(f"Error querying Ticketmaster for {artist_name}: {e}")
++        return None

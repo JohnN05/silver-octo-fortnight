@@ -17,12 +17,17 @@ def estimate_face_value(artist_score, venue_capacity=None):
         base_price = 75.0
         
     # Adjust price for venue capacity tier
-    if venue_capacity and venue_capacity > 10000:
-        # Arena premium
-        base_price += 15.0
-    elif venue_capacity and venue_capacity <= 3000:
-        # Club discount
-        base_price = max(base_price - 5.0, 25.0)
+    if venue_capacity:
+        try:
+            v_cap = int(venue_capacity)
+            if v_cap > 10000:
+                # Arena premium
+                base_price += 15.0
+            elif v_cap <= 3000:
+                # Club discount
+                base_price = max(base_price - 5.0, 25.0)
+        except (ValueError, TypeError):
+            pass
         
     return base_price
 
