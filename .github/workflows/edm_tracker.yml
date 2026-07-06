@@ -1,10 +1,10 @@
 name: Daily EDM Ticket Tracker
 
 on:
-  schedule:
-    # Runs at 13:00 UTC (9:00 AM EDT / Gaithersburg local time) every day
-    - cron: '0 13 * * *'
   workflow_dispatch: # Allows manual trigger from the GitHub Actions UI
+
+permissions:
+  contents: write
 
 jobs:
   run-tracker:
@@ -30,4 +30,7 @@ jobs:
           SEATGEEK_CLIENT_ID: ${{ secrets.SEATGEEK_CLIENT_ID }}
           SEATGEEK_CLIENT_SECRET: ${{ secrets.SEATGEEK_CLIENT_SECRET }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: python main.py
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python main.py

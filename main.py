@@ -18,6 +18,15 @@ def run_tracker():
     conn = database.initialize_db("edm_tracker.db")
     
     try:
+        # Pull latest changes from remote to avoid non-fast-forward conflicts
+        try:
+            logger.info("Pulling latest changes from remote...")
+            # Discard any local uncommitted changes to data.json to ensure a clean pull
+            subprocess.run(["git", "checkout", "--", "docs/data.json"], capture_output=True)
+            subprocess.run(["git", "pull", "--rebase", "--autostash", "origin", "main"], check=True)
+        except subprocess.CalledProcessError as e:
+            logger.warning(f"Git pull failed: {e}")
+
         logger.info("Starting Daily Ticket Tracker ETL...")
         events_to_notify = etl_pipeline.run_daily_etl(conn)
         
