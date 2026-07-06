@@ -52,7 +52,11 @@ def run_daily_etl(conn):
         
             if not face_value:
                 # Fallback to face value estimation
-                face_value = event.get("face_value") or utils.estimate_face_value(event["artist_score"], event.get("venue_capacity"))
+                face_value = event.get("face_value") or utils.estimate_face_value(
+                    artist_score=event["artist_score"],
+                    venue_capacity=event.get("venue_capacity"),
+                    venue_name=event.get("venue_name")
+                )
                 
             event["face_value"] = face_value
             event["onsale_date"] = onsale_date
