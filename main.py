@@ -14,12 +14,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def run_tracker(test_mode=False):
+def run_tracker():
     conn = database.initialize_db("edm_tracker.db")
     
     try:
         logger.info("Starting Daily Ticket Tracker ETL...")
-        events_to_notify = etl_pipeline.run_daily_etl(conn, test_mode=test_mode)
+        events_to_notify = etl_pipeline.run_daily_etl(conn)
         
         # Send alerts & build report
         notifier.send_discord_notification(events_to_notify)
@@ -77,6 +77,6 @@ if __name__ == "__main__":
         ]
         
         with patch("seatgeek_client.get_upcoming_edm_events", return_value=test_events):
-            run_tracker(test_mode=is_test)
+            run_tracker()
     else:
-        run_tracker(test_mode=is_test)
+        run_tracker()

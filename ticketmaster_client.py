@@ -4,26 +4,9 @@ import config
 
 logger = logging.getLogger(__name__)
 
-def mock_ticketmaster_event_details(artist_name: str) -> dict:
-    if "Fred again" in artist_name:
-        return {
-            "face_value_min": 75.0,
-            "face_value_max": 95.0,
-            "onsale_date": "2026-07-15T10:00:00",
-            "ticketmaster_url": "https://www.ticketmaster.com/mock-fred-again"
-        }
-    elif "John Summit" in artist_name:
-        return {
-            "face_value_min": 45.0,
-            "face_value_max": 65.0,
-            "onsale_date": "2026-07-10T12:00:00",
-            "ticketmaster_url": "https://www.ticketmaster.com/mock-john-summit"
-        }
-    return None
-
-def get_ticketmaster_event_details(artist_name: str, venue_city: str, test_mode=False) -> dict:
-    if test_mode or not getattr(config, 'TICKETMASTER_API_KEY', None):
-        return mock_ticketmaster_event_details(artist_name)
+def get_ticketmaster_event_details(artist_name: str, venue_city: str) -> dict:
+    if not getattr(config, 'TICKETMASTER_API_KEY', None):
+        return None
     
     url = "https://app.ticketmaster.com/discovery/v2/events.json"
     params = {

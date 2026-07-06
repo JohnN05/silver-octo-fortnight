@@ -1,35 +1,11 @@
 import config
 import logging
+import utils
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def estimate_face_value(artist_score, venue_capacity=None):
-    """
-    Estimates ticket face value based on artist score and venue capacity.
-    """
-    # Set base price based on score
-    if artist_score < 0.45:
-        base_price = 30.0
-    elif artist_score < 0.65:
-        base_price = 45.0
-    else:
-        base_price = 75.0
-        
-    # Adjust price for venue capacity tier
-    if venue_capacity:
-        try:
-            v_cap = int(venue_capacity)
-            if v_cap > 10000:
-                # Arena premium
-                base_price += 15.0
-            elif v_cap <= 3000:
-                # Club discount
-                base_price = max(base_price - 5.0, 25.0)
-        except (ValueError, TypeError):
-            pass
-        
-    return base_price
+
 
 def evaluate_deal(event):
     """
@@ -48,7 +24,7 @@ def evaluate_deal(event):
     # 1. Determine Face Value
     face_val = event.get("face_value")
     if not face_val:
-        face_val = estimate_face_value(artist_score, venue_capacity)
+        face_val = utils.estimate_face_value(artist_score, venue_capacity)
         
     # 2. Get best resale price available
     resale_price = event.get("resale_lowest")

@@ -6,15 +6,30 @@ import valuation_engine
 import config
 from datetime import datetime, timedelta, timezone
 import logging
+import concurrent.futures
+import utils
 
-def run_daily_etl(conn, test_mode=False):
+def run_daily_etl(conn):
     # 1. Fetch upcoming events near location
     upcoming = seatgeek_client.get_upcoming_edm_events()
     
+    # Helper to fetch external data concurrently
+    def fetch_external(ev):
+        tm_details = ticketmaster_client.get_ticketmaster_event_details(ev["artist"], ev.get("venue_city"))
+        resale_lowest = stubhub_scraper.scrape_stubhub_resale_price(ev["artist"], ev.get("venue_city"))
+        return tm_details, resale_lowest
+
+    # Run API fetches concurrently
+    futures = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        for event in upcoming:
+            futures.append((event, executor.submit(fetch_external, event)))
+    
     results = []
     
-    for event in upcoming:
+    for event, future in futures:
         try:
+            tm_details, fetched_resale_lowest = future.result()
             performer_id = event["artist_id"]
             
             # Check database for performer
@@ -23,9 +38,7 @@ def run_daily_etl(conn, test_mode=False):
             
             if performer:
                 # Check staleness (7-day threshold)
-                last_updated = datetime.fromisoformat(performer["last_updated"])
-                if datetime.now(timezone.utc).replace(tzinfo=None) - last_updated < timedelta(days=config.STALE_THRESHOLD_DAYS):
-                    is_stale = False
+                is_stale = utils.is_stale(performer.get("last_updated"), config.STALE_THRESHOLD_DAYS)
                     
             if not performer or is_stale:
                 # Perform historical bootstrapping (lazy load)
@@ -33,14 +46,13 @@ def run_daily_etl(conn, test_mode=False):
                 performer = database.get_performer(conn, performer_id)
             
             # Fetch face value and onsale date via Ticketmaster Discovery API
-            tm_details = ticketmaster_client.get_ticketmaster_event_details(event["artist"], event.get("venue_city"))
             face_value = tm_details.get("face_value_min") if tm_details else None
             onsale_date = tm_details.get("onsale_date") if tm_details else None
             ticketmaster_url = tm_details.get("ticketmaster_url") if tm_details else None
         
             if not face_value:
-                # Fallback to SeatGeek face value estimation
-                face_value = event.get("face_value") or valuation_engine.estimate_face_value(event["artist_score"], event.get("venue_capacity"))
+                # Fallback to face value estimation
+                face_value = event.get("face_value") or utils.estimate_face_value(event["artist_score"], event.get("venue_capacity"))
                 
             event["face_value"] = face_value
             event["onsale_date"] = onsale_date
@@ -49,7 +61,7 @@ def run_daily_etl(conn, test_mode=False):
             # Get current resale price on StubHub
             resale_lowest = event.get("resale_lowest")
             if not resale_lowest:
-                resale_lowest = stubhub_scraper.scrape_stubhub_resale_price(event["artist"], event.get("venue_city"))
+                resale_lowest = fetched_resale_lowest
             event["resale_lowest"] = resale_lowest
             
             # Write upcoming event to database

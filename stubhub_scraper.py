@@ -62,16 +62,29 @@ def scrape_stubhub_resale_price(artist_name, venue_city=""):
                     logger.info(f"Found lowest price in StubHub initial state JSON: ${price}")
                     return price
         
-        # Method 2: Look for currency/price strings in the HTML (e.g., "$85", "from $90")
-        # Find all text nodes that look like dollar amounts
-        text_content = soup.get_text()
-        prices = re.findall(r'\$\s*([0-9]{1,4})(?!\d)', text_content)
+        # Method 2: Look for currency/price strings in specific DOM elements
+        # Find all elements that likely contain a price
+        price_elements = soup.find_all(class_=re.compile(r'price|amount|cost', re.I))
+        prices = []
+        for el in price_elements:
+            text = el.get_text()
+            matches = re.findall(r'\$\s*([0-9]{1,4})(?!\d)', text)
+            for m in matches:
+                if float(m) > 5:
+                    prices.append(float(m))
+                    
+        # If specific classes failed, fallback to scanning entire text but restrict pattern
+        if not prices:
+            text_content = soup.get_text()
+            matches = re.findall(r'(?:price|tickets? from)\s*\$\s*([0-9]{1,4})(?!\d)', text_content, re.I)
+            for m in matches:
+                if float(m) > 5:
+                    prices.append(float(m))
+
         if prices:
-            prices = [float(p) for p in prices if float(p) > 5]  # ignore tiny numbers
-            if prices:
-                min_price = min(prices)
-                logger.info(f"Parsed lowest price from StubHub text: ${min_price}")
-                return min_price
+            min_price = min(prices)
+            logger.info(f"Parsed lowest price from StubHub text: ${min_price}")
+            return min_price
                 
         logger.info("No prices could be parsed from StubHub search page HTML.")
         return None

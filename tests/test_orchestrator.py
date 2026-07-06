@@ -3,18 +3,20 @@ from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta, timezone
 import orchestrator
 
+import utils
+
 def test_is_stale():
     # Test missing date
-    assert orchestrator.is_stale(None, 7) == True
+    assert utils.is_stale(None, 7) == True
     
     # Test valid date, not stale
     now = datetime.now(timezone.utc)
     recent = (now - timedelta(days=2)).strftime("%Y-%m-%d %H:%M:%S")
-    assert orchestrator.is_stale(recent, 7) == False
+    assert utils.is_stale(recent, 7) == False
     
     # Test stale date
     stale = (now - timedelta(days=8)).strftime("%Y-%m-%d %H:%M:%S")
-    assert orchestrator.is_stale(stale, 7) == True
+    assert utils.is_stale(stale, 7) == True
 
 @patch("database.get_performer")
 @patch("database.save_performer")
@@ -59,7 +61,7 @@ def test_get_or_update_performer_stale(mock_avg, mock_save, mock_get):
     mock_save.assert_called_once()
     
 @patch("ticketmaster_client.get_ticketmaster_event_details")
-@patch("resale_checker.estimate_face_value")
+@patch("utils.estimate_face_value")
 @patch("database.save_event")
 @patch("orchestrator.get_or_update_performer")
 def test_process_event_tm_fallback(mock_get_perf, mock_save_event, mock_estimate, mock_tm):

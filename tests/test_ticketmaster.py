@@ -3,12 +3,10 @@ import config
 from unittest.mock import patch
 import requests
 
+@patch('config.TICKETMASTER_API_KEY', None)
 def test_mock_ticketmaster_details():
-    details = ticketmaster_client.get_ticketmaster_event_details("Fred again..", "Washington", test_mode=True)
-    assert details is not None
-    assert details["face_value_min"] == 75.0
-    assert details["face_value_max"] == 95.0
-    assert details["onsale_date"] == "2026-07-15T10:00:00"
+    details = ticketmaster_client.get_ticketmaster_event_details("Fred again..", "Washington")
+    assert details is None
 
 @patch('config.TICKETMASTER_API_KEY', 'test_key')
 @patch('ticketmaster_client.requests.get')
@@ -26,7 +24,7 @@ def test_real_ticketmaster_happy_path(mock_get):
         }
     }
     
-    details = ticketmaster_client.get_ticketmaster_event_details("Artist", "City", test_mode=False)
+    details = ticketmaster_client.get_ticketmaster_event_details("Artist", "City")
     assert details is not None
     assert details["face_value_min"] == 50.0
     assert details["face_value_max"] == 100.0
@@ -41,7 +39,7 @@ def test_real_ticketmaster_empty_response(mock_get):
     mock_response = mock_get.return_value
     mock_response.json.return_value = {}  # No events found
     
-    details = ticketmaster_client.get_ticketmaster_event_details("Artist", "City", test_mode=False)
+    details = ticketmaster_client.get_ticketmaster_event_details("Artist", "City")
     assert details is None
     mock_get.assert_called_once()
 
@@ -50,6 +48,6 @@ def test_real_ticketmaster_empty_response(mock_get):
 def test_real_ticketmaster_error_state(mock_get):
     mock_get.side_effect = requests.exceptions.RequestException("API Error")
     
-    details = ticketmaster_client.get_ticketmaster_event_details("Artist", "City", test_mode=False)
+    details = ticketmaster_client.get_ticketmaster_event_details("Artist", "City")
     assert details is None
     mock_get.assert_called_once()

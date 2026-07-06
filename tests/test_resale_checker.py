@@ -1,12 +1,13 @@
 import resale_checker
+import utils
 
 def test_estimate_face_value():
     # Arena show for high popularity artist
-    arena_val = resale_checker.estimate_face_value(0.8, venue_capacity=15000)
+    arena_val = utils.estimate_face_value(0.8, venue_capacity=15000)
     assert arena_val == 90.0
     
     # Club show for same artist
-    club_val = resale_checker.estimate_face_value(0.8, venue_capacity=1500)
+    club_val = utils.estimate_face_value(0.8, venue_capacity=1500)
     assert club_val == 70.0
 
 def test_evaluate_deal_passes_capacity():

@@ -1,6 +1,7 @@
 import sqlite3
 import pytest
 import valuation_engine
+import utils
 
 def test_priority_score_calculation():
     # High markup, high velocity, strong historical stats
@@ -136,12 +137,12 @@ def test_calculate_priority_score():
     assert updated_event["rating"] in ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
 
 def test_estimate_face_value():
-    assert valuation_engine.estimate_face_value(0.9) == 75.0
-    assert valuation_engine.estimate_face_value(0.7) == 55.0
-    assert valuation_engine.estimate_face_value(0.5) == 40.0
+    assert utils.estimate_face_value(0.9) == 75.0
+    assert utils.estimate_face_value(0.5) == 45.0
+    assert utils.estimate_face_value(0.3) == 30.0
     
 def test_estimate_face_value_with_capacity():
-    assert valuation_engine.estimate_face_value(0.9, 400) == 65.0
-    assert valuation_engine.estimate_face_value(0.9, 1000) == 75.0
-    assert valuation_engine.estimate_face_value(0.5, 300) == 30.0
+    assert utils.estimate_face_value(0.9, 15000) == 90.0
+    assert utils.estimate_face_value(0.9, 1000) == 70.0
+    assert utils.estimate_face_value(0.3, 1000) == 25.0
 
