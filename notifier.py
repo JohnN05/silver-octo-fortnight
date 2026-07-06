@@ -30,8 +30,9 @@ def send_discord_notification(events_with_analysis):
         venue = event["venue"]
         
         # Clean concise details
-        price_details = f"Est. Face Value: ${event['face_value']:.2f}\n"
-        est_resale = event.get('resale_average') or event.get('resale_lowest') or event['face_value']
+        face_val = event.get('face_value') or 0.0
+        price_details = f"Est. Face Value: ${face_val:.2f}\n"
+        est_resale = event.get('resale_average') or event.get('resale_lowest') or event.get('face_value') or 0.0
         price_details += f"Estimated Resale Value: ${est_resale:.2f}"
             
         color = 0xE74C3C if analysis["rating"] == "CRITICAL" else 0x3498DB
@@ -77,7 +78,9 @@ def generate_markdown_report(events_with_analysis):
     
     for event, analysis in events_with_analysis:
         status = "On Sale" if not event.get("onsale_date") else f"Presale: {event['onsale_date']}"
-        md += f"| {analysis['rating']} | {event['artist']} | {event['venue']} | {event['date']} | ${event['face_value']:.2f} | ${event.get('resale_lowest', 0.0):.2f} | +{analysis['roi']}% | {status} |\n"
+        face_val = event.get('face_value') or 0.0
+        resale_val = event.get('resale_lowest') or 0.0
+        md += f"| {analysis['rating']} | {event['artist']} | {event['venue']} | {event['date']} | ${face_val:.2f} | ${resale_val:.2f} | +{analysis['roi']}% | {status} |\n"
         
     with open(report_path, "w") as f:
         f.write(md)
@@ -95,7 +98,7 @@ def generate_json_data(events_with_analysis):
         event_copy["analysis_roi"] = analysis["roi"]
         
         # Calculate estimated resale from actual resale data (avg_past_markup is not populated by ETL)
-        est_resale = event.get('resale_average') or event.get('resale_lowest') or event['face_value']
+        est_resale = event.get('resale_average') or event.get('resale_lowest') or event.get('face_value') or 0.0
         event_copy["estimated_resale"] = est_resale
         
         data.append(event_copy)
