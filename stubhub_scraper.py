@@ -3,6 +3,8 @@ import requests
 from bs4 import BeautifulSoup
 import logging
 import re
+import json
+from datetime import datetime
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,11 +21,126 @@ def get_stubhub_search_url(artist_name, venue_city=""):
     encoded_query = urllib.parse.quote(query)
     return f"https://www.stubhub.com/secure/search?q={encoded_query}"
 
-def scrape_stubhub_resale_price(artist_name, venue_city=""):
+def scrape_tickpick_resale_price(artist_name, venue_city="", event_date=None):
     """
-    Attempts to scrape StubHub search results for the lowest ticket price.
+    Scrapes TickPick search results for the lowest ticket price.
+    TickPick is more scrapable than StubHub and does not block simple requests.
+    """
+    # Query just the artist name to find the performer on TickPick
+    url = f"https://www.tickpick.com/search/?q={urllib.parse.quote(artist_name)}"
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+    
+    try:
+        logger.info(f"Attempting to query TickPick search for: {artist_name}")
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code != 200:
+            logger.warning(f"TickPick returned status code {response.status_code} for query: {artist_name}")
+            return None
+            
+        # Extract Next.js streams
+        scripts = re.findall(r'self\.__next_f\.push\(\[1,\s*"(.*?)"\s*\]\)', response.text)
+        full_stream = "".join(s.replace(r'\"', '"').replace(r'\\', '\\') for s in scripts)
+        
+        parsed_events = []
+        for m in re.finditer(r'"event_id":"([0-9]+)"', full_stream):
+            idx = m.start()
+            sub = full_stream[idx - 1 : idx + 1000]
+            brace_idx = sub.find('}')
+            if brace_idx != -1:
+                json_str = "{" + sub[1:brace_idx+1]
+                try:
+                    ev = json.loads(json_str)
+                    if "event_name" in ev and "min_price" in ev:
+                        parsed_events.append(ev)
+                except Exception:
+                    pass
+                    
+        # Filter matching events
+        best_match = None
+        for ev in parsed_events:
+            ev_name = ev.get("event_name", "").lower()
+            ev_city = ev.get("city", "").lower()
+            ev_venue = ev.get("venue_name", "").lower()
+            ev_date_str = ev.get("event_date", "")
+            
+            # Match performer name
+            clean_artist = re.sub(r'[^\w\s]', '', artist_name).lower()
+            clean_ev_name = re.sub(r'[^\w\s]', '', ev_name).lower()
+            
+            is_artist_match = (clean_artist in clean_ev_name or
+                               (artist_name.lower() == "dj diesel" and "diesel" in clean_ev_name))
+                               
+            if not is_artist_match:
+                continue
+                
+            # Match city or venue name
+            if venue_city:
+                clean_city = re.sub(r'[^\w\s]', '', venue_city).lower()
+                if clean_city not in ev_city and clean_city not in ev_venue:
+                    continue
+                    
+            # Match date if provided
+            if event_date:
+                try:
+                    dt_ev = datetime.fromisoformat(ev_date_str.split('T')[0]).date()
+                    dt_tgt = datetime.fromisoformat(event_date.split('T')[0]).date()
+                    if dt_ev != dt_tgt:
+                        continue
+                except Exception:
+                    pass
+                    
+            best_match = ev
+            break
+            
+        if best_match:
+            price = best_match.get("min_price")
+            logger.info(f"Found TickPick price for {artist_name} in {venue_city}: ${price}")
+            return float(price) if price is not None else None
+            
+        # Fallback without date filtering
+        for ev in parsed_events:
+            ev_name = ev.get("event_name", "").lower()
+            ev_city = ev.get("city", "").lower()
+            ev_venue = ev.get("venue_name", "").lower()
+            
+            clean_artist = re.sub(r'[^\w\s]', '', artist_name).lower()
+            clean_ev_name = re.sub(r'[^\w\s]', '', ev_name).lower()
+            
+            is_artist_match = (clean_artist in clean_ev_name or
+                               (artist_name.lower() == "dj diesel" and "diesel" in clean_ev_name))
+            if not is_artist_match:
+                continue
+                
+            if venue_city:
+                clean_city = re.sub(r'[^\w\s]', '', venue_city).lower()
+                if clean_city not in ev_city and clean_city not in ev_venue:
+                    continue
+                    
+            price = ev.get("min_price")
+            logger.info(f"Found fallback TickPick price for {artist_name} in {venue_city}: ${price}")
+            return float(price) if price is not None else None
+            
+    except Exception as e:
+        logger.warning(f"TickPick scraping failed: {e}")
+        
+    return None
+
+def scrape_stubhub_resale_price(artist_name, venue_city="", event_date=None):
+    """
+    Attempts to scrape resale prices, checking TickPick first, then falling back to StubHub.
     Uses browser headers, but falls back gracefully to None if blocked by Akamai/Cloudflare.
     """
+    # 1. Try TickPick first (high success rate, low blocking)
+    price = scrape_tickpick_resale_price(artist_name, venue_city, event_date)
+    if price is not None:
+        return price
+        
+    # 2. Fall back to StubHub
     search_url = get_stubhub_search_url(artist_name, venue_city)
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",

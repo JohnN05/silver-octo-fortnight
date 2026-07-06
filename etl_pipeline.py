@@ -16,7 +16,7 @@ def run_daily_etl(conn):
     # Helper to fetch external data concurrently
     def fetch_external(ev):
         tm_details = ticketmaster_client.get_ticketmaster_event_details(ev["artist"], ev.get("venue_city"))
-        resale_lowest = stubhub_scraper.scrape_stubhub_resale_price(ev["artist"], ev.get("venue_city"))
+        resale_lowest = stubhub_scraper.scrape_stubhub_resale_price(ev["artist"], ev.get("venue_city"), ev.get("date"))
         return tm_details, resale_lowest
 
     # Run API fetches concurrently
