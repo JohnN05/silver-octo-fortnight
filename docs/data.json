@@ -1,5 +1,5 @@
 {
-    "last_updated": "2026-07-05T17:30:14.886241",
+    "last_updated": "2026-07-05T21:21:30.355401",
     "events": [
         {
             "id": 22222,
@@ -19,11 +19,11 @@
             "resale_count": 89,
             "face_value": 75.0,
             "venue_capacity": 6000,
-            "onsale_date": "2026-07-15T10:00:00",
-            "ticketmaster_url": "https://www.ticketmaster.com/mock-fred-again",
+            "onsale_date": null,
+            "ticketmaster_url": null,
             "analysis_rating": "MEDIUM",
             "analysis_roi": 115.3,
-            "estimated_resale": 75.0
+            "estimated_resale": 220.0
         }
     ]
 }
