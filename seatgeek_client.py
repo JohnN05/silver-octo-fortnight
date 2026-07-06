@@ -105,6 +105,10 @@ def get_upcoming_edm_events() -> List[Dict[str, Any]]:
             # or try to scrape/estimate it.
             face_value = event.get("original_delivery_fee") # dummy check
             
+            integrated = event.get("integrated") or {}
+            provider_name = integrated.get("provider_name")
+            provider_id = integrated.get("provider_id")
+            
             # Prepare event dict
             parsed_event = {
                 "id": event.get("id"),
@@ -123,6 +127,8 @@ def get_upcoming_edm_events() -> List[Dict[str, Any]]:
                 "resale_average": average_price,
                 "resale_count": listing_count,
                 "face_value": face_value,
+                "provider_name": provider_name,
+                "provider_id": provider_id,
                 "announcements": event.get("announcements") or {}
             }
             

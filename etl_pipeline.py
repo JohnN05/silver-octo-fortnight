@@ -49,6 +49,16 @@ def run_daily_etl(conn):
             face_value = tm_details.get("face_value_min") if tm_details else None
             onsale_date = tm_details.get("onsale_date") if tm_details else None
             ticketmaster_url = tm_details.get("ticketmaster_url") if tm_details else None
+            
+            # Reconstruct URL from Seatgeek integrated provider data if available
+            if not ticketmaster_url and event.get("provider_name") == "TICKETMASTER" and event.get("provider_id"):
+                ticketmaster_url = f"https://www.ticketmaster.com/event/{event['provider_id']}"
+            
+            # If TM API didn't have price, try scraping via ScraperAPI if we have a TM URL
+            if not face_value and ticketmaster_url and getattr(config, 'SCRAPER_API_KEY', None):
+                scraped_price = ticketmaster_client.scrape_ticketmaster_price(ticketmaster_url)
+                if scraped_price:
+                    face_value = scraped_price
         
             if not face_value:
                 # Fallback to face value estimation
@@ -57,7 +67,6 @@ def run_daily_etl(conn):
                     venue_capacity=event.get("venue_capacity"),
                     venue_name=event.get("venue_name")
                 )
-                
             event["face_value"] = face_value
             event["onsale_date"] = onsale_date
             event["ticketmaster_url"] = ticketmaster_url

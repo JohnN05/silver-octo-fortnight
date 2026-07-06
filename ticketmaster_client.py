@@ -56,3 +56,52 @@ def get_ticketmaster_event_details(artist_name: str, venue_city: str) -> dict:
     except (requests.exceptions.RequestException, ValueError) as e:
         logger.error(f"Error querying Ticketmaster for {artist_name}: {e}")
         return None
+
+import re
+
+def scrape_ticketmaster_price(url: str) -> float:
+    """
+    Attempts to scrape the true face value from a Ticketmaster event page using ScraperAPI
+    to bypass Akamai WAF.
+    """
+    if not getattr(config, 'SCRAPER_API_KEY', None) or not url:
+        return None
+        
+    payload = {
+        'api_key': config.SCRAPER_API_KEY,
+        'url': url,
+        'antibot': 'true'  # Recommended for highly protected sites like Ticketmaster
+    }
+    
+    logger.info(f"Attempting to scrape Ticketmaster face value via ScraperAPI for: {url}")
+    try:
+        response = requests.get('https://api.scraperapi.com/', params=payload, timeout=45)
+        if response.status_code == 200:
+            content = response.text
+            
+            # Attempt to parse minPrice from __INITIAL_STATE__ or generic JSON in the page
+            prices = re.findall(r'"minPrice"\s*:\s*([0-9.]+)', content)
+            if prices:
+                valid_prices = [float(p) for p in prices if float(p) > 5]
+                if valid_prices:
+                    val = min(valid_prices)
+                    logger.info(f"Found Ticketmaster minPrice: ${val}")
+                    return val
+            
+            # Fallback to scanning for faceValue
+            face_values = re.findall(r'"faceValue"\s*:\s*([0-9.]+)', content)
+            if face_values:
+                valid_fv = [float(p) for p in face_values if float(p) > 5]
+                if valid_fv:
+                    val = min(valid_fv)
+                    logger.info(f"Found Ticketmaster faceValue: ${val}")
+                    return val
+                    
+            logger.info(f"ScraperAPI fetched page but found no price data in HTML.")
+        else:
+            logger.warning(f"ScraperAPI returned status {response.status_code}")
+            
+    except Exception as e:
+        logger.error(f"Error scraping Ticketmaster with ScraperAPI: {e}")
+        
+    return None
