@@ -3,3 +3,7 @@
 __pycache__/
 *.pyc
 .worktrees/
+*.db
+docs/*.jpg
+docs/reports/
+.pytest_cache/
