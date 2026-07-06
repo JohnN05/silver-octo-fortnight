@@ -1,5 +1,5 @@
 {
-    "last_updated": "2026-07-05T21:47:53.633753",
+    "last_updated": "2026-07-05T21:58:29.718829",
     "events": [
         {
             "id": 18196104,
@@ -13,7 +13,7 @@
             "venue_city": "Washington",
             "venue_state": "DC",
             "url": "https://seatgeek.com/layton-giordani-tickets/washington-district-of-columbia-echostage-2026-07-17-10-pm/concert/18196104",
-            "resale_lowest": null,
+            "resale_lowest": 55.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -22,8 +22,8 @@
             "onsale_date": "2026-04-23T14:00:00Z",
             "ticketmaster_url": "https://www.ticketmaster.com/layton-giordani-360o-set-washington-district-of-columbia-07-17-2026/event/15006494DC83C461",
             "analysis_rating": "LOW",
-            "analysis_roi": 0.0,
-            "estimated_resale": 45.0
+            "analysis_roi": 3.9,
+            "estimated_resale": 55.0
         },
         {
             "id": 18263379,
@@ -37,7 +37,7 @@
             "venue_city": "Baltimore",
             "venue_state": "MD",
             "url": "https://seatgeek.com/dj-diesel-tickets/baltimore-maryland-power-plant-live-2026-07-24-9-pm/concert/18263379",
-            "resale_lowest": null,
+            "resale_lowest": 57.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -46,8 +46,8 @@
             "onsale_date": "1900-01-01T06:00:00Z",
             "ticketmaster_url": "https://www.ticketmaster.com/event/Z7r9jZ1A70EPx",
             "analysis_rating": "LOW",
-            "analysis_roi": 0.0,
-            "estimated_resale": 45.0
+            "analysis_roi": 7.7,
+            "estimated_resale": 57.0
         },
         {
             "id": 18009505,
@@ -61,7 +61,7 @@
             "venue_city": "Baltimore",
             "venue_state": "MD",
             "url": "https://seatgeek.com/levity-tickets/baltimore-maryland-pier-six-pavilion-2026-07-31-7-pm/concert/18009505",
-            "resale_lowest": null,
+            "resale_lowest": 45.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -70,7 +70,7 @@
             "onsale_date": "2026-01-16T15:00:00Z",
             "ticketmaster_url": "https://www.ticketmaster.com/levity-x-tape-b-present-summer-baltimore-maryland-07-31-2026/event/15006425D14B7AFE",
             "analysis_rating": "LOW",
-            "analysis_roi": 0.0,
+            "analysis_roi": -15.0,
             "estimated_resale": 45.0
         },
         {
@@ -85,7 +85,7 @@
             "venue_city": "Washington",
             "venue_state": "DC",
             "url": "https://seatgeek.com/slander-tickets/washington-district-of-columbia-echostage-2026-07-31-10-pm/concert/18258870",
-            "resale_lowest": null,
+            "resale_lowest": 89.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -93,9 +93,9 @@
             "announcements": {},
             "onsale_date": "2026-05-21T16:00:00Z",
             "ticketmaster_url": "https://www.ticketmaster.com/slander-night-2-washington-district-of-columbia-08-01-2026/event/150064B2F238A6B2",
-            "analysis_rating": "LOW",
-            "analysis_roi": 0.0,
-            "estimated_resale": 45.0
+            "analysis_rating": "MEDIUM",
+            "analysis_roi": 68.1,
+            "estimated_resale": 89.0
         },
         {
             "id": 18328601,
@@ -109,7 +109,7 @@
             "venue_city": "Washington",
             "venue_state": "DC",
             "url": "https://seatgeek.com/virtual-riot-tickets/washington-district-of-columbia-echostage-2026-08-21-10-pm/concert/18328601",
-            "resale_lowest": null,
+            "resale_lowest": 84.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -117,9 +117,9 @@
             "announcements": {},
             "onsale_date": "2026-06-26T14:00:00Z",
             "ticketmaster_url": "https://www.ticketmaster.com/virtual-riot-blanke-far-from-home-washington-district-of-columbia-08-21-2026/event/150064D6B47C75B9",
-            "analysis_rating": "LOW",
-            "analysis_roi": 0.0,
-            "estimated_resale": 30.0
+            "analysis_rating": "MEDIUM",
+            "analysis_roi": 138.0,
+            "estimated_resale": 84.0
         },
         {
             "id": 18345148,
@@ -133,7 +133,7 @@
             "venue_city": "Washington",
             "venue_state": "DC",
             "url": "https://seatgeek.com/william-black-tickets/washington-district-of-columbia-echostage-2026-08-29-10-pm/concert/18345148",
-            "resale_lowest": null,
+            "resale_lowest": 65.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -141,9 +141,9 @@
             "announcements": {},
             "onsale_date": "2026-07-01T17:00:00Z",
             "ticketmaster_url": "https://www.ticketmaster.com/william-black-the-shadow-realm-tour-washington-district-of-columbia-08-29-2026/event/150064DCED1AA001",
-            "analysis_rating": "LOW",
-            "analysis_roi": 0.0,
-            "estimated_resale": 30.0
+            "analysis_rating": "MEDIUM",
+            "analysis_roi": 84.2,
+            "estimated_resale": 65.0
         }
     ]
 }
