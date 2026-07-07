@@ -7,10 +7,14 @@ def test_config_variables_loaded():
         "TICKETMASTER_API_KEY": "test_tm_key",
         "SEATGEEK_CLIENT_ID": "test_sg_id",
         "DISCORD_WEBHOOK_URL": "http://test.url",
+        "APIFY_API_TOKEN": "test_apify_token",
+        "EVENTBRITE_API_TOKEN": "test_eb_token",
     }):
         import config
         importlib.reload(config)
         assert config.TICKETMASTER_API_KEY == "test_tm_key"
+        assert config.APIFY_API_TOKEN == "test_apify_token"
+        assert config.EVENTBRITE_API_TOKEN == "test_eb_token"
         assert config.STALE_THRESHOLD_DAYS == 7
 
 def test_validate_config_no_ticketmaster_key():
