@@ -17,25 +17,40 @@ class ApifyTicketmasterClient(BaseTicketClient):
             "maxItems": 100
         }
 
-        # Run the Actor and wait for it to finish
-        run = self.client.actor(self.ACTOR_ID).call(run_input=run_input)
+        try:
+            # Run the Actor and wait for it to finish
+            run = self.client.actor(self.ACTOR_ID).call(run_input=run_input)
 
-        # Fetch results from the dataset
-        prices = []
-        for item in self.client.dataset(run["defaultDatasetId"]).iterate_items():
-            price_val = float(item.get("price", 0.0))
-            prices.append(
-                PriceRange(
-                    min_price=price_val,
-                    max_price=price_val,
-                    currency=item.get("currency", "USD"),
-                    type=item.get("type", "Standard Ticket")
+            # Fetch results from the dataset
+            prices = []
+            for item in self.client.dataset(run["defaultDatasetId"]).iterate_items():
+                raw_price = item.get("price")
+                if raw_price is None:
+                    continue
+                try:
+                    price_val = float(raw_price)
+                except (ValueError, TypeError):
+                    continue
+
+                prices.append(
+                    PriceRange(
+                        min_price=price_val,
+                        max_price=price_val,
+                        currency=item.get("currency", "USD"),
+                        type=item.get("type", "Standard Ticket")
+                    )
                 )
+                
+            return EventPricing(
+                event_id=event_url,
+                platform="ticketmaster",
+                prices=prices,
+                url=event_url
             )
-            
-        return EventPricing(
-            event_id=event_url,
-            platform="ticketmaster",
-            prices=prices,
-            url=event_url
-        )
+        except Exception:
+            return EventPricing(
+                event_id=event_url,
+                platform="ticketmaster",
+                prices=[],
+                url=event_url
+            )

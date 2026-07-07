@@ -81,3 +81,55 @@ def test_get_event_prices_success(mocker):
     assert len(pricing.prices) == 1
     assert pricing.prices[0].min_price == 125.50
     assert pricing.prices[0].max_price == 125.50
+
+def test_get_event_prices_api_error(mocker):
+    mock_apify = mocker.patch('ticket_pricing.ticketmaster.ApifyClient')
+    mock_client_instance = MagicMock()
+    mock_apify.return_value = mock_client_instance
+    
+    mock_client_instance.actor().call.side_effect = Exception("API Rate Limit")
+    
+    client = ApifyTicketmasterClient(api_token="test_token")
+    pricing = client.get_event_prices("https://ticketmaster.com/event")
+    
+    assert pricing.platform == "ticketmaster"
+    assert pricing.event_id == "https://ticketmaster.com/event"
+    assert len(pricing.prices) == 0
+
+def test_get_event_prices_invalid_prices(mocker):
+    mock_apify = mocker.patch('ticket_pricing.ticketmaster.ApifyClient')
+    mock_client_instance = MagicMock()
+    mock_apify.return_value = mock_client_instance
+    
+    mock_client_instance.actor().call.return_value = {"defaultDatasetId": "dataset_123"}
+    mock_client_instance.dataset().iterate_items.return_value = [
+        {
+            "id": "1",
+            "url": "https://ticketmaster.com/event",
+            "price": None,
+            "currency": "USD",
+            "type": "General Admission"
+        },
+        {
+            "id": "2",
+            "url": "https://ticketmaster.com/event",
+            "price": "invalid",
+            "currency": "USD",
+            "type": "General Admission"
+        },
+        {
+            "id": "3",
+            "url": "https://ticketmaster.com/event",
+            "price": 50.0,
+            "currency": "USD",
+            "type": "General Admission"
+        }
+    ]
+    
+    client = ApifyTicketmasterClient(api_token="test_token")
+    pricing = client.get_event_prices("https://ticketmaster.com/event")
+    
+    assert pricing.platform == "ticketmaster"
+    assert pricing.event_id == "https://ticketmaster.com/event"
+    assert len(pricing.prices) == 1
+    assert pricing.prices[0].min_price == 50.0
