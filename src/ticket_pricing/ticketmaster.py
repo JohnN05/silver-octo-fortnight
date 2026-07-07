@@ -1,29 +1,36 @@
 # src/ticket_pricing/ticketmaster.py
+import logging
 from apify_client import ApifyClient
 from ticket_pricing.base import BaseTicketClient
 from ticket_pricing.models import EventPricing, PriceRange
+
+logger = logging.getLogger(__name__)
 
 class ApifyTicketmasterClient(BaseTicketClient):
     # We use a popular, reliable Apify actor for Ticketmaster scraping
     ACTOR_ID = "katerinah/ticketmaster-scraper"
 
-    def __init__(self, api_token: str):
+    def __init__(self, api_token: str) -> None:
         self.client = ApifyClient(api_token)
 
     def get_event_prices(self, event_url: str) -> EventPricing:
         # Prepare the Actor input
         run_input = {
             "startUrls": [{"url": event_url}],
-            "maxItems": 100
+            "maxItems": 100,
+            "includeResale": False
         }
 
         try:
             # Run the Actor and wait for it to finish
-            run = self.client.actor(self.ACTOR_ID).call(run_input=run_input)
+            run = self.client.actor(self.ACTOR_ID).call(run_input=run_input, memory_mbytes=128)
 
             # Fetch results from the dataset
             prices = []
             for item in self.client.dataset(run["defaultDatasetId"]).iterate_items():
+                if item.get("isResale") or "resale" in item.get("type", "").lower():
+                    continue
+
                 raw_price = item.get("price")
                 if raw_price is None:
                     continue
@@ -48,6 +55,7 @@ class ApifyTicketmasterClient(BaseTicketClient):
                 url=event_url
             )
         except Exception:
+            logger.error("Apify error", exc_info=True)
             return EventPricing(
                 event_id=event_url,
                 platform="ticketmaster",

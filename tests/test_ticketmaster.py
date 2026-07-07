@@ -1,7 +1,9 @@
-import ticketmaster_client
-import config
-from unittest.mock import patch
+import pytest
 import requests
+import config
+from unittest.mock import patch, MagicMock
+import ticketmaster_client
+from ticket_pricing.ticketmaster import ApifyTicketmasterClient
 
 @patch('config.TICKETMASTER_API_KEY', None)
 def test_mock_ticketmaster_details():
@@ -51,9 +53,6 @@ def test_real_ticketmaster_error_state(mock_get):
     details = ticketmaster_client.get_ticketmaster_event_details("Artist", "City")
     assert details is None
     mock_get.assert_called_once()
-
-from unittest.mock import MagicMock
-from ticket_pricing.ticketmaster import ApifyTicketmasterClient
 
 def test_get_event_prices_success(mocker):
     # Mock the ApifyClient
