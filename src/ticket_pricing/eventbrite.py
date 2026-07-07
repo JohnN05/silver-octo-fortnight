@@ -14,7 +14,7 @@ class EventbriteClient(BaseTicketClient):
     def get_event_prices(self, event_id: str) -> EventPricing:
         url = f"{self.BASE_URL}/events/{event_id}/ticket_classes/"
         headers = {"Authorization": f"Bearer {self.api_token}"}
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=10)
         
         try:
             response.raise_for_status()
