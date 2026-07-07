@@ -125,11 +125,11 @@ def test_etl_stale_cache(default_mocks, db_conn):
     mock_bootstrap.assert_called_once()
 
 
-def test_fetch_face_value_from_new_fetcher(default_mocks, db_conn):
+def test_fetch_face_value_from_new_fetcher(default_mocks, db_conn, monkeypatch):
     mock_bootstrap, mock_stubhub, mock_tm, mock_sg = default_mocks
     
     # Ensure config has API tokens for the new fetcher
-    config.APIFY_API_TOKEN = "fake_apify_token"
+    monkeypatch.setattr(config, "APIFY_API_TOKEN", "fake_apify_token")
     
     # We want TM API to NOT have price, so it falls back to fetcher
     mock_tm.return_value = {"face_value_min": None, "onsale_date": "2026-01-01", "ticketmaster_url": "url"}
@@ -148,12 +148,12 @@ def test_fetch_face_value_from_new_fetcher(default_mocks, db_conn):
         event, analysis = results[0]
         assert event["face_value"] == 45.0
 
-def test_fetch_face_value_from_eventbrite(default_mocks, db_conn):
+def test_fetch_face_value_from_eventbrite(default_mocks, db_conn, monkeypatch):
     mock_bootstrap, mock_stubhub, mock_tm, mock_sg = default_mocks
     
     # Setup for eventbrite
-    config.APIFY_API_TOKEN = None # Disable TM fetcher just to be safe
-    config.EVENTBRITE_API_TOKEN = "fake_eb_token"
+    monkeypatch.setattr(config, "APIFY_API_TOKEN", None) # Disable TM fetcher just to be safe
+    monkeypatch.setattr(config, "EVENTBRITE_API_TOKEN", "fake_eb_token")
     
     # Mock SeatGeek event to have eventbrite provider info
     mock_sg.return_value = [
@@ -187,12 +187,12 @@ def test_fetch_face_value_from_eventbrite(default_mocks, db_conn):
         event, analysis = results[0]
         assert event["face_value"] == 35.0
 
-def test_fetch_face_value_missing_tokens(default_mocks, db_conn):
+def test_fetch_face_value_missing_tokens(default_mocks, db_conn, monkeypatch):
     mock_bootstrap, mock_stubhub, mock_tm, mock_sg = default_mocks
     
     # Missing API tokens
-    config.APIFY_API_TOKEN = None
-    config.EVENTBRITE_API_TOKEN = None
+    monkeypatch.setattr(config, "APIFY_API_TOKEN", None)
+    monkeypatch.setattr(config, "EVENTBRITE_API_TOKEN", None)
     
     # Setup SG with both TM and EB potentially available
     mock_sg.return_value = [
