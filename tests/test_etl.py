@@ -147,3 +147,82 @@ def test_fetch_face_value_from_new_fetcher(default_mocks, db_conn):
         assert len(results) == 1
         event, analysis = results[0]
         assert event["face_value"] == 45.0
+
+def test_fetch_face_value_from_eventbrite(default_mocks, db_conn):
+    mock_bootstrap, mock_stubhub, mock_tm, mock_sg = default_mocks
+    
+    # Setup for eventbrite
+    config.APIFY_API_TOKEN = None # Disable TM fetcher just to be safe
+    config.EVENTBRITE_API_TOKEN = "fake_eb_token"
+    
+    # Mock SeatGeek event to have eventbrite provider info
+    mock_sg.return_value = [
+        {
+            "id": 12345,
+            "title": "Fred again.. @ The Anthem",
+            "artist": "Fred again..",
+            "artist_id": 11111,
+            "artist_score": 0.89,
+            "date": "2026-09-02T20:00:00",
+            "venue_name": "The Anthem",
+            "venue_city": "Washington",
+            "venue_state": "DC",
+            "url": "https://seatgeek.com/fred-again-tickets",
+            "provider_name": "EVENTBRITE",
+            "provider_id": "eb_123"
+        }
+    ]
+    # No price from TM
+    mock_tm.return_value = {"face_value_min": None, "onsale_date": "2026-01-01", "ticketmaster_url": None}
+    
+    from ticket_pricing.models import EventPricing, PriceRange
+    mock_pricing = EventPricing(event_id="eb_123", platform="eventbrite", prices=[PriceRange(min_price=35.0, max_price=35.0, currency="USD", type="General Admission")])
+
+    with patch("etl_pipeline.TicketPricingFetcher.get_prices", return_value=mock_pricing) as mock_get_prices:
+        results = etl_pipeline.run_daily_etl(db_conn)
+        
+        mock_get_prices.assert_called_once_with("eventbrite", "eb_123")
+        
+        assert len(results) == 1
+        event, analysis = results[0]
+        assert event["face_value"] == 35.0
+
+def test_fetch_face_value_missing_tokens(default_mocks, db_conn):
+    mock_bootstrap, mock_stubhub, mock_tm, mock_sg = default_mocks
+    
+    # Missing API tokens
+    config.APIFY_API_TOKEN = None
+    config.EVENTBRITE_API_TOKEN = None
+    
+    # Setup SG with both TM and EB potentially available
+    mock_sg.return_value = [
+        {
+            "id": 12345,
+            "title": "Fred again.. @ The Anthem",
+            "artist": "Fred again..",
+            "artist_id": 11111,
+            "artist_score": 0.89,
+            "date": "2026-09-02T20:00:00",
+            "venue_name": "The Anthem",
+            "venue_city": "Washington",
+            "venue_state": "DC",
+            "url": "https://seatgeek.com/fred-again-tickets",
+            "provider_name": "EVENTBRITE",
+            "provider_id": "eb_123",
+            "face_value": 75.0 # Pre-existing estimate
+        }
+    ]
+    
+    mock_tm.return_value = {"face_value_min": None, "onsale_date": "2026-01-01", "ticketmaster_url": "url"}
+
+    with patch("etl_pipeline.TicketPricingFetcher.get_prices") as mock_get_prices:
+        results = etl_pipeline.run_daily_etl(db_conn)
+        
+        # Verify get_prices was NOT called because tokens are missing
+        mock_get_prices.assert_not_called()
+        
+        # It should fallback to the estimated/provided face value (75.0)
+        assert len(results) == 1
+        event, analysis = results[0]
+        assert event["face_value"] == 75.0
+
