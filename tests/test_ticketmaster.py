@@ -51,3 +51,33 @@ def test_real_ticketmaster_error_state(mock_get):
     details = ticketmaster_client.get_ticketmaster_event_details("Artist", "City")
     assert details is None
     mock_get.assert_called_once()
+
+from unittest.mock import MagicMock
+from ticket_pricing.ticketmaster import ApifyTicketmasterClient
+
+def test_get_event_prices_success(mocker):
+    # Mock the ApifyClient
+    mock_apify = mocker.patch('ticket_pricing.ticketmaster.ApifyClient')
+    mock_client_instance = MagicMock()
+    mock_apify.return_value = mock_client_instance
+    
+    # Mock the run and dataset behavior
+    mock_client_instance.actor().call.return_value = {"defaultDatasetId": "dataset_123"}
+    mock_client_instance.dataset().iterate_items.return_value = [
+        {
+            "id": "Z7r9jZ1Ae_0",
+            "url": "https://ticketmaster.com/event",
+            "price": 125.50,
+            "currency": "USD",
+            "type": "General Admission"
+        }
+    ]
+    
+    client = ApifyTicketmasterClient(api_token="test_token")
+    pricing = client.get_event_prices("https://ticketmaster.com/event")
+    
+    assert pricing.platform == "ticketmaster"
+    assert pricing.event_id == "https://ticketmaster.com/event"
+    assert len(pricing.prices) == 1
+    assert pricing.prices[0].min_price == 125.50
+    assert pricing.prices[0].max_price == 125.50
