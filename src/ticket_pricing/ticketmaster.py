@@ -44,7 +44,7 @@ class ApifyTicketmasterClient(BaseTicketClient):
                         min_price=price_val,
                         max_price=price_val,
                         currency=item.get("currency", "USD"),
-                        type=item.get("type", "Standard Ticket")
+                        type=item.get("type") or "Standard Ticket"
                     )
                 )
                 

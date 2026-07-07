@@ -75,6 +75,16 @@ def test_get_event_prices_success(mocker):
     client = ApifyTicketmasterClient(api_token="test_token")
     pricing = client.get_event_prices("https://ticketmaster.com/event")
     
+    mock_client_instance.actor.assert_called_with("katerinah/ticketmaster-scraper")
+    mock_client_instance.actor().call.assert_called_once_with(
+        run_input={
+            "startUrls": [{"url": "https://ticketmaster.com/event"}],
+            "maxItems": 100,
+            "includeResale": False
+        },
+        memory_mbytes=128
+    )
+
     assert pricing.platform == "ticketmaster"
     assert pricing.event_id == "https://ticketmaster.com/event"
     assert len(pricing.prices) == 1
@@ -91,6 +101,16 @@ def test_get_event_prices_api_error(mocker):
     client = ApifyTicketmasterClient(api_token="test_token")
     pricing = client.get_event_prices("https://ticketmaster.com/event")
     
+    mock_client_instance.actor.assert_called_with("katerinah/ticketmaster-scraper")
+    mock_client_instance.actor().call.assert_called_once_with(
+        run_input={
+            "startUrls": [{"url": "https://ticketmaster.com/event"}],
+            "maxItems": 100,
+            "includeResale": False
+        },
+        memory_mbytes=128
+    )
+
     assert pricing.platform == "ticketmaster"
     assert pricing.event_id == "https://ticketmaster.com/event"
     assert len(pricing.prices) == 0
@@ -128,6 +148,16 @@ def test_get_event_prices_invalid_prices(mocker):
     client = ApifyTicketmasterClient(api_token="test_token")
     pricing = client.get_event_prices("https://ticketmaster.com/event")
     
+    mock_client_instance.actor.assert_called_with("katerinah/ticketmaster-scraper")
+    mock_client_instance.actor().call.assert_called_once_with(
+        run_input={
+            "startUrls": [{"url": "https://ticketmaster.com/event"}],
+            "maxItems": 100,
+            "includeResale": False
+        },
+        memory_mbytes=128
+    )
+
     assert pricing.platform == "ticketmaster"
     assert pricing.event_id == "https://ticketmaster.com/event"
     assert len(pricing.prices) == 1
@@ -174,6 +204,16 @@ def test_get_event_prices_resale_filtering(mocker):
     client = ApifyTicketmasterClient(api_token="test_token")
     pricing = client.get_event_prices("https://ticketmaster.com/event")
     
+    mock_client_instance.actor.assert_called_with("katerinah/ticketmaster-scraper")
+    mock_client_instance.actor().call.assert_called_once_with(
+        run_input={
+            "startUrls": [{"url": "https://ticketmaster.com/event"}],
+            "maxItems": 100,
+            "includeResale": False
+        },
+        memory_mbytes=128
+    )
+
     assert pricing.platform == "ticketmaster"
     assert len(pricing.prices) == 2
     assert pricing.prices[0].min_price == 200.0
