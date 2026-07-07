@@ -28,7 +28,7 @@ class ApifyTicketmasterClient(BaseTicketClient):
             # Fetch results from the dataset
             prices = []
             for item in self.client.dataset(run["defaultDatasetId"]).iterate_items():
-                if item.get("isResale") or "resale" in item.get("type", "").lower():
+                if item.get("isResale") or "resale" in (item.get("type") or "").lower():
                     continue
 
                 raw_price = item.get("price")

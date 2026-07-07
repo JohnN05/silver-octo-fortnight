@@ -132,3 +132,50 @@ def test_get_event_prices_invalid_prices(mocker):
     assert pricing.event_id == "https://ticketmaster.com/event"
     assert len(pricing.prices) == 1
     assert pricing.prices[0].min_price == 50.0
+
+def test_get_event_prices_resale_filtering(mocker):
+    mock_apify = mocker.patch('ticket_pricing.ticketmaster.ApifyClient')
+    mock_client_instance = MagicMock()
+    mock_apify.return_value = mock_client_instance
+    
+    mock_client_instance.actor().call.return_value = {"defaultDatasetId": "dataset_123"}
+    mock_client_instance.dataset().iterate_items.return_value = [
+        {
+            "id": "1",
+            "url": "https://ticketmaster.com/event",
+            "price": 100.0,
+            "currency": "USD",
+            "type": "Resale Ticket"
+        },
+        {
+            "id": "2",
+            "url": "https://ticketmaster.com/event",
+            "price": 150.0,
+            "currency": "USD",
+            "type": "Standard Ticket",
+            "isResale": True
+        },
+        {
+            "id": "3",
+            "url": "https://ticketmaster.com/event",
+            "price": 200.0,
+            "currency": "USD",
+            "type": None
+        },
+        {
+            "id": "4",
+            "url": "https://ticketmaster.com/event",
+            "price": 50.0,
+            "currency": "USD",
+            "type": "Standard Ticket"
+        }
+    ]
+    
+    client = ApifyTicketmasterClient(api_token="test_token")
+    pricing = client.get_event_prices("https://ticketmaster.com/event")
+    
+    assert pricing.platform == "ticketmaster"
+    assert len(pricing.prices) == 2
+    assert pricing.prices[0].min_price == 200.0
+    assert pricing.prices[1].min_price == 50.0
+
