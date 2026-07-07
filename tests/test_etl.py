@@ -124,3 +124,26 @@ def test_etl_stale_cache(default_mocks, db_conn):
     assert len(shows) > 0  # Shows should be bootstrapped
     mock_bootstrap.assert_called_once()
 
+
+def test_fetch_face_value_from_new_fetcher(default_mocks, db_conn):
+    mock_bootstrap, mock_stubhub, mock_tm, mock_sg = default_mocks
+    
+    # Ensure config has API tokens for the new fetcher
+    config.APIFY_API_TOKEN = "fake_apify_token"
+    
+    # We want TM API to NOT have price, so it falls back to fetcher
+    mock_tm.return_value = {"face_value_min": None, "onsale_date": "2026-01-01", "ticketmaster_url": "url"}
+    
+    from ticket_pricing.models import EventPricing, PriceRange
+    mock_pricing = EventPricing(event_id="test", platform="ticketmaster", prices=[PriceRange(min_price=45.0, max_price=45.0, currency="USD", type="Standard Ticket")])
+
+    with patch("etl_pipeline.TicketPricingFetcher.get_prices", return_value=mock_pricing) as mock_get_prices:
+        results = etl_pipeline.run_daily_etl(db_conn)
+        
+        # Verify get_prices was called
+        mock_get_prices.assert_called_once_with("ticketmaster", "url")
+        
+        # Verify face value was updated from new fetcher
+        assert len(results) == 1
+        event, analysis = results[0]
+        assert event["face_value"] == 45.0
