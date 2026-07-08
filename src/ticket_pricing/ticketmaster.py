@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class ApifyTicketmasterClient(BaseTicketClient):
     # We use a popular, reliable Apify actor for Ticketmaster scraping
-    ACTOR_ID = "katerinah/ticketmaster-scraper"
+    ACTOR_ID = "parseforge/ticketmaster-scraper"
 
     def __init__(self, api_token: str) -> None:
         self.client = ApifyClient(api_token)
@@ -26,8 +26,47 @@ class ApifyTicketmasterClient(BaseTicketClient):
             run = self.client.actor(self.ACTOR_ID).call(run_input=run_input, memory_mbytes=128)
 
             # Fetch results from the dataset
+            if isinstance(run, dict):
+                dataset_id = run.get("defaultDatasetId")
+            elif hasattr(run, "default_dataset_id"):
+                dataset_id = run.default_dataset_id
+            elif hasattr(run, "dict"):
+                dataset_id = run.dict().get("default_dataset_id") or run.dict().get("defaultDatasetId")
+            else:
+                dataset_id = getattr(run, "defaultDatasetId", None)
+
             prices = []
-            for item in self.client.dataset(run["defaultDatasetId"]).iterate_items():
+            for item in self.client.dataset(dataset_id).iterate_items():
+                # 1. Parse using tickets dictionary (parseforge schema)
+                tickets = item.get("tickets")
+                if isinstance(tickets, dict):
+                    min_p = tickets.get("minPrice")
+                    max_p = tickets.get("maxPrice")
+                    currency = tickets.get("currency") or item.get("currency") or "USD"
+                    is_resale = (
+                        item.get("isResale")
+                        or tickets.get("isResale")
+                        or "resale" in (item.get("type") or "").lower()
+                        or "resale" in (tickets.get("type") or "").lower()
+                    )
+                    if not is_resale:
+                        if min_p is not None:
+                            try:
+                                min_val = float(min_p)
+                                max_val = float(max_p) if max_p is not None else min_val
+                                prices.append(
+                                    PriceRange(
+                                        min_price=min_val,
+                                        max_price=max_val,
+                                        currency=currency,
+                                        type="Standard Ticket"
+                                    )
+                                )
+                                continue  # successfully parsed via new schema
+                            except (ValueError, TypeError):
+                                pass
+
+                # 2. Fallback to old flat schema
                 if item.get("isResale") or "resale" in (item.get("type") or "").lower():
                     continue
 
