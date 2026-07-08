@@ -1,5 +1,5 @@
 {
-    "last_updated": "2026-07-07T19:32:29.525046",
+    "last_updated": "2026-07-07T22:52:54.085761",
     "events": [
         {
             "id": 18196104,
@@ -99,8 +99,8 @@
             "provider_name": "TICKETMASTER",
             "provider_id": "150064B2F095A518",
             "announcements": {},
-            "onsale_date": "2026-05-21T16:00:00Z",
-            "ticketmaster_url": "https://www.ticketmaster.com/slander-night-2-washington-district-of-columbia-08-01-2026/event/150064B2F238A6B2",
+            "onsale_date": null,
+            "ticketmaster_url": "https://www.ticketmaster.com/event/150064B2F095A518",
             "analysis_rating": "LOW",
             "analysis_roi": 37.5,
             "estimated_resale": 89.0
@@ -156,6 +156,32 @@
             "analysis_rating": "LOW",
             "analysis_roi": 37.4,
             "estimated_resale": 76.0
+        },
+        {
+            "id": 18317850,
+            "title": "Hugel",
+            "artist": "Hugel",
+            "artist_id": 339983,
+            "artist_score": 0.49,
+            "date": "2026-09-05T20:00:00",
+            "venue": "Echostage (Washington, DC)",
+            "venue_name": "Echostage",
+            "venue_city": "Washington",
+            "venue_state": "DC",
+            "url": "https://seatgeek.com/hugel-tickets/washington-district-of-columbia-echostage-2026-09-05-8-pm/concert/18317850",
+            "resale_lowest": 111.0,
+            "resale_highest": null,
+            "resale_average": null,
+            "resale_count": 0,
+            "face_value": 55.0,
+            "provider_name": "TICKETMASTER",
+            "provider_id": "150064CFD186AB3D",
+            "announcements": {},
+            "onsale_date": "2026-06-19T17:00:00Z",
+            "ticketmaster_url": "https://www.ticketmaster.com/hugel-washington-district-of-columbia-09-05-2026/event/150064CFD186AB3D",
+            "analysis_rating": "MEDIUM",
+            "analysis_roi": 71.5,
+            "estimated_resale": 111.0
         }
     ]
 }
