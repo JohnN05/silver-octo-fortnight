@@ -8,8 +8,24 @@ from datetime import datetime, timedelta, timezone
 import logging
 import concurrent.futures
 import utils
+from ticket_pricing.fetcher import TicketPricingFetcher
+from ticket_pricing.ticketmaster import ApifyTicketmasterClient
+from ticket_pricing.eventbrite import EventbriteClient
+
+def _extract_min_price(pricing):
+    if not pricing or not getattr(pricing, 'prices', None):
+        return None
+    valid_prices = [p.min_price for p in pricing.prices if getattr(p, 'min_price', None) is not None]
+    return min(valid_prices) if valid_prices else None
 
 def run_daily_etl(conn):
+    # Setup Fetcher
+    fetcher = TicketPricingFetcher()
+    if getattr(config, 'APIFY_API_TOKEN', None):
+        fetcher.register_client("ticketmaster", ApifyTicketmasterClient(config.APIFY_API_TOKEN))
+    if getattr(config, 'EVENTBRITE_API_TOKEN', None):
+        fetcher.register_client("eventbrite", EventbriteClient(config.EVENTBRITE_API_TOKEN))
+
     # 1. Fetch upcoming events near location
     upcoming = seatgeek_client.get_upcoming_edm_events()
     
@@ -54,11 +70,25 @@ def run_daily_etl(conn):
             if not ticketmaster_url and event.get("provider_name") == "TICKETMASTER" and event.get("provider_id"):
                 ticketmaster_url = f"https://www.ticketmaster.com/event/{event['provider_id']}"
             
-            # If TM API didn't have price, try scraping via ScraperAPI if we have a TM URL
-            if not face_value and ticketmaster_url and getattr(config, 'SCRAPER_API_KEY', None):
-                scraped_price = ticketmaster_client.scrape_ticketmaster_price(ticketmaster_url)
-                if scraped_price:
-                    face_value = scraped_price
+            # If TM API didn't have price, try fetching via Apify
+            if not face_value and ticketmaster_url and getattr(config, 'APIFY_API_TOKEN', None):
+                try:
+                    pricing = fetcher.get_prices("ticketmaster", ticketmaster_url)
+                    extracted = _extract_min_price(pricing)
+                    if extracted is not None:
+                        face_value = extracted
+                except Exception as e:
+                    logging.error(f"Error fetching ticketmaster prices for {ticketmaster_url}: {e}")
+                    
+            # Check Eventbrite if SeatGeek specified it
+            if not face_value and event.get("provider_name") == "EVENTBRITE" and event.get("provider_id") and getattr(config, 'EVENTBRITE_API_TOKEN', None):
+                try:
+                    pricing = fetcher.get_prices("eventbrite", event["provider_id"])
+                    extracted = _extract_min_price(pricing)
+                    if extracted is not None:
+                        face_value = extracted
+                except Exception as e:
+                    logging.error(f"Error fetching eventbrite prices for {event.get('provider_id')}: {e}")
         
             if not face_value:
                 # Fallback to face value estimation
