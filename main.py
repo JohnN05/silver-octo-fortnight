@@ -1,4 +1,9 @@
 import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+
+import sys
 import subprocess
 import logging
 import database
@@ -89,3 +94,4 @@ if __name__ == "__main__":
             run_tracker()
     else:
         run_tracker()
+
