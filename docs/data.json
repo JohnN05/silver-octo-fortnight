@@ -1,5 +1,5 @@
 {
-    "last_updated": "2026-07-08T19:19:02.025148",
+    "last_updated": "2026-07-08T21:47:47.105020",
     "events": [
         {
             "id": 18196104,
@@ -13,7 +13,7 @@
             "venue_city": "Washington",
             "venue_state": "DC",
             "url": "https://seatgeek.com/layton-giordani-tickets/washington-district-of-columbia-echostage-2026-07-17-10-pm/concert/18196104",
-            "resale_lowest": 55.0,
+            "resale_lowest": 57.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -24,8 +24,8 @@
             "onsale_date": "2026-04-23T14:00:00Z",
             "ticketmaster_url": "https://www.ticketmaster.com/layton-giordani-360o-set-washington-district-of-columbia-07-17-2026/event/15006494DC83C461",
             "analysis_rating": "LOW",
-            "analysis_roi": -15.0,
-            "estimated_resale": 55.0
+            "analysis_roi": -11.9,
+            "estimated_resale": 57.0
         },
         {
             "id": 18263379,
@@ -39,7 +39,7 @@
             "venue_city": "Baltimore",
             "venue_state": "MD",
             "url": "https://seatgeek.com/dj-diesel-tickets/baltimore-maryland-power-plant-live-2026-07-24-9-pm/concert/18263379",
-            "resale_lowest": 57.0,
+            "resale_lowest": 51.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -50,8 +50,8 @@
             "onsale_date": "1900-01-01T06:00:00Z",
             "ticketmaster_url": "https://www.ticketmaster.com/event/Z7r9jZ1A70EPx",
             "analysis_rating": "LOW",
-            "analysis_roi": -11.9,
-            "estimated_resale": 57.0
+            "analysis_roi": -21.2,
+            "estimated_resale": 51.0
         },
         {
             "id": 18009505,
@@ -182,6 +182,32 @@
             "analysis_rating": "MEDIUM",
             "analysis_roi": 71.5,
             "estimated_resale": 111.0
+        },
+        {
+            "id": 18354682,
+            "title": "Odd Mob",
+            "artist": "Odd Mob",
+            "artist_id": 788152,
+            "artist_score": 0.51,
+            "date": "2026-09-06T21:00:00",
+            "venue": "Echostage (Washington, DC)",
+            "venue_name": "Echostage",
+            "venue_city": "Washington",
+            "venue_state": "DC",
+            "url": "https://seatgeek.com/odd-mob-tickets/washington-district-of-columbia-echostage-2026-09-06-9-pm/concert/18354682",
+            "resale_lowest": null,
+            "resale_highest": null,
+            "resale_average": null,
+            "resale_count": 0,
+            "face_value": 55.0,
+            "provider_name": "TICKETMASTER",
+            "provider_id": "150064E508BA9EBB",
+            "announcements": {},
+            "onsale_date": "2026-07-10T14:00:00Z",
+            "ticketmaster_url": "https://www.ticketmaster.com/odd-mob-ldw-washington-district-of-columbia-09-06-2026/event/150064E508BA9EBB",
+            "analysis_rating": "LOW",
+            "analysis_roi": 0.0,
+            "estimated_resale": 55.0
         }
     ]
 }
