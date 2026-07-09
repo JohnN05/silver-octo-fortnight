@@ -1,92 +1,91 @@
 # src/ticket_pricing/ticketmaster.py
 import logging
-from apify_client import ApifyClient
+import requests
+import json
+from bs4 import BeautifulSoup
 from ticket_pricing.base import BaseTicketClient
 from ticket_pricing.models import EventPricing, PriceRange
 
 logger = logging.getLogger(__name__)
 
-class ApifyTicketmasterClient(BaseTicketClient):
-    # We use a popular, reliable Apify actor for Ticketmaster scraping
-    ACTOR_ID = "parseforge/ticketmaster-scraper"
-
-    def __init__(self, api_token: str) -> None:
-        self.client = ApifyClient(api_token)
+class ScraperApiTicketmasterClient(BaseTicketClient):
+    # Uses ScraperAPI to bypass bot protection and extract JSON-LD offers
+    def __init__(self, api_key: str) -> None:
+        self.api_key = api_key
+        self.base_url = "http://api.scraperapi.com"
 
     def get_event_prices(self, event_url: str) -> EventPricing:
-        # Prepare the Actor input
-        run_input = {
-            "startUrls": [{"url": event_url}],
-            "maxItems": 100,
-            "includeResale": False
+        payload = {
+            'api_key': self.api_key,
+            'url': event_url,
+            'render': 'true',  # TM requires JS rendering
+            'country_code': 'us'
         }
-
+        
         try:
-            # Run the Actor and wait for it to finish
-            run = self.client.actor(self.ACTOR_ID).call(run_input=run_input, memory_mbytes=128)
-
-            # Fetch results from the dataset
-            if isinstance(run, dict):
-                dataset_id = run.get("defaultDatasetId")
-            elif hasattr(run, "default_dataset_id"):
-                dataset_id = run.default_dataset_id
-            elif hasattr(run, "dict"):
-                dataset_id = run.dict().get("default_dataset_id") or run.dict().get("defaultDatasetId")
-            else:
-                dataset_id = getattr(run, "defaultDatasetId", None)
-
+            response = requests.get(self.base_url, params=payload, timeout=60)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
             prices = []
-            for item in self.client.dataset(dataset_id).iterate_items():
-                # 1. Parse using tickets dictionary (parseforge schema)
-                tickets = item.get("tickets")
-                if isinstance(tickets, dict):
-                    min_p = tickets.get("minPrice")
-                    max_p = tickets.get("maxPrice")
-                    currency = tickets.get("currency") or item.get("currency") or "USD"
-                    is_resale = (
-                        item.get("isResale")
-                        or tickets.get("isResale")
-                        or "resale" in (item.get("type") or "").lower()
-                        or "resale" in (tickets.get("type") or "").lower()
-                    )
-                    if not is_resale:
-                        if min_p is not None:
-                            try:
-                                min_val = float(min_p)
-                                max_val = float(max_p) if max_p is not None else min_val
-                                prices.append(
-                                    PriceRange(
-                                        min_price=min_val,
-                                        max_price=max_val,
-                                        currency=currency,
-                                        type="Standard Ticket"
-                                    )
-                                )
-                                continue  # successfully parsed via new schema
-                            except (ValueError, TypeError):
-                                pass
-
-                # 2. Fallback to old flat schema
-                if item.get("isResale") or "resale" in (item.get("type") or "").lower():
-                    continue
-
-                raw_price = item.get("price")
-                if raw_price is None:
+            
+            # Find JSON-LD script tags
+            scripts = soup.find_all('script', type='application/ld+json')
+            for script in scripts:
+                if not script.string:
                     continue
                 try:
-                    price_val = float(raw_price)
-                except (ValueError, TypeError):
-                    continue
+                    data = json.loads(script.string)
+                    # Handle if data is a list
+                    if isinstance(data, list):
+                        items = data
+                    else:
+                        items = [data]
+                        
+                    for item in items:
+                        if item.get('@type') in ('Event', 'MusicEvent', 'TheaterEvent', 'SportsEvent', 'ComedyEvent', 'DanceEvent', 'Festival'):
+                            offers = item.get('offers')
+                            if not offers:
+                                continue
+                            if isinstance(offers, dict):
+                                offers = [offers]
+                            
+                            for offer in offers:
+                                price = offer.get('price')
+                                low_price = offer.get('lowPrice')
+                                high_price = offer.get('highPrice')
+                                currency = offer.get('priceCurrency', 'USD')
+                                
+                                # If it's an AggregateOffer it might have lowPrice
+                                if offer.get('@type') == 'AggregateOffer':
+                                    min_val = float(low_price) if low_price is not None else None
+                                    max_val = float(high_price) if high_price is not None else min_val
+                                    if min_val is not None:
+                                        prices.append(
+                                            PriceRange(
+                                                min_price=min_val,
+                                                max_price=max_val,
+                                                currency=currency,
+                                                type="AggregateOffer"
+                                            )
+                                        )
+                                else:
+                                    if price is not None:
+                                        try:
+                                            p = float(price)
+                                            prices.append(
+                                                PriceRange(
+                                                    min_price=p,
+                                                    max_price=p,
+                                                    currency=currency,
+                                                    type="Standard Ticket"
+                                                )
+                                            )
+                                        except (ValueError, TypeError):
+                                            pass
+                except json.JSONDecodeError:
+                    pass
 
-                prices.append(
-                    PriceRange(
-                        min_price=price_val,
-                        max_price=price_val,
-                        currency=item.get("currency", "USD"),
-                        type=item.get("type") or "Standard Ticket"
-                    )
-                )
-                
             return EventPricing(
                 event_id=event_url,
                 platform="ticketmaster",
@@ -94,7 +93,7 @@ class ApifyTicketmasterClient(BaseTicketClient):
                 url=event_url
             )
         except Exception:
-            logger.error("Apify error", exc_info=True)
+            logger.error("ScraperAPI error", exc_info=True)
             return EventPricing(
                 event_id=event_url,
                 platform="ticketmaster",

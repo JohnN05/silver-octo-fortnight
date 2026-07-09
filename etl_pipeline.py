@@ -9,7 +9,7 @@ import logging
 import concurrent.futures
 import utils
 from ticket_pricing.fetcher import TicketPricingFetcher
-from ticket_pricing.ticketmaster import ApifyTicketmasterClient
+from ticket_pricing.ticketmaster import ScraperApiTicketmasterClient
 from ticket_pricing.eventbrite import EventbriteClient
 
 def _extract_min_price(pricing):
@@ -21,8 +21,8 @@ def _extract_min_price(pricing):
 def run_daily_etl(conn):
     # Setup Fetcher
     fetcher = TicketPricingFetcher()
-    if getattr(config, 'APIFY_API_TOKEN', None):
-        fetcher.register_client("ticketmaster", ApifyTicketmasterClient(config.APIFY_API_TOKEN))
+    if getattr(config, 'SCRAPER_API_KEY', None):
+        fetcher.register_client("ticketmaster", ScraperApiTicketmasterClient(config.SCRAPER_API_KEY))
     if getattr(config, 'EVENTBRITE_API_TOKEN', None):
         fetcher.register_client("eventbrite", EventbriteClient(config.EVENTBRITE_API_TOKEN))
 
@@ -70,8 +70,8 @@ def run_daily_etl(conn):
             if not ticketmaster_url and event.get("provider_name") == "TICKETMASTER" and event.get("provider_id"):
                 ticketmaster_url = f"https://www.ticketmaster.com/event/{event['provider_id']}"
             
-            # If TM API didn't have price, try fetching via Apify
-            if not face_value and ticketmaster_url and getattr(config, 'APIFY_API_TOKEN', None):
+            # If TM API didn't have price, try fetching via ScraperAPI
+            if not face_value and ticketmaster_url and getattr(config, 'SCRAPER_API_KEY', None):
                 try:
                     pricing = fetcher.get_prices("ticketmaster", ticketmaster_url)
                     extracted = _extract_min_price(pricing)

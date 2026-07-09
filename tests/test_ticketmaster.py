@@ -3,7 +3,7 @@ import requests
 import config
 from unittest.mock import patch, MagicMock
 import ticketmaster_client
-from ticket_pricing.ticketmaster import ApifyTicketmasterClient
+from ticket_pricing.ticketmaster import ScraperApiTicketmasterClient
 
 @patch('config.TICKETMASTER_API_KEY', None)
 def test_mock_ticketmaster_details():
@@ -54,209 +54,57 @@ def test_real_ticketmaster_error_state(mock_get):
     assert details is None
     mock_get.assert_called_once()
 
-def test_get_event_prices_success(mocker):
-    # Mock the ApifyClient
-    mock_apify = mocker.patch('ticket_pricing.ticketmaster.ApifyClient')
-    mock_client_instance = MagicMock()
-    mock_apify.return_value = mock_client_instance
-    
-    # Mock the run and dataset behavior
-    mock_client_instance.actor().call.return_value = {"defaultDatasetId": "dataset_123"}
-    mock_client_instance.dataset().iterate_items.return_value = [
-        {
-            "id": "Z7r9jZ1Ae_0",
-            "url": "https://ticketmaster.com/event",
-            "price": 125.50,
-            "currency": "USD",
-            "type": "General Admission"
-        }
-    ]
-    
-    client = ApifyTicketmasterClient(api_token="test_token")
+@patch('ticket_pricing.ticketmaster.requests.get')
+def test_scraper_api_ticketmaster_client_success(mock_get):
+    html_content = """
+    <html>
+        <body>
+            <script type="application/ld+json">
+            {
+                "@type": "MusicEvent",
+                "offers": {
+                    "@type": "AggregateOffer",
+                    "lowPrice": "45.50",
+                    "highPrice": "150.00",
+                    "priceCurrency": "USD"
+                }
+            }
+            </script>
+        </body>
+    </html>
+    """
+    mock_response = MagicMock()
+    mock_response.text = html_content
+    mock_response.raise_for_status = MagicMock()
+    mock_get.return_value = mock_response
+
+    client = ScraperApiTicketmasterClient(api_key="test_scraper_key")
     pricing = client.get_event_prices("https://ticketmaster.com/event")
     
-    mock_client_instance.actor.assert_called_with("parseforge/ticketmaster-scraper")
-    mock_client_instance.actor().call.assert_called_once_with(
-        run_input={
-            "startUrls": [{"url": "https://ticketmaster.com/event"}],
-            "maxItems": 100,
-            "includeResale": False
-        },
-        memory_mbytes=128
-    )
-
     assert pricing.platform == "ticketmaster"
-    assert pricing.event_id == "https://ticketmaster.com/event"
     assert len(pricing.prices) == 1
-    assert pricing.prices[0].min_price == 125.50
-    assert pricing.prices[0].max_price == 125.50
+    assert pricing.prices[0].min_price == 45.50
+    assert pricing.prices[0].max_price == 150.00
+    assert pricing.prices[0].currency == "USD"
+    mock_get.assert_called_once()
 
-def test_get_event_prices_api_error(mocker):
-    mock_apify = mocker.patch('ticket_pricing.ticketmaster.ApifyClient')
-    mock_client_instance = MagicMock()
-    mock_apify.return_value = mock_client_instance
-    
-    mock_client_instance.actor().call.side_effect = Exception("API Rate Limit")
-    
-    client = ApifyTicketmasterClient(api_token="test_token")
+@patch('ticket_pricing.ticketmaster.requests.get')
+def test_scraper_api_ticketmaster_client_no_prices(mock_get):
+    html_content = "<html><body></body></html>"
+    mock_response = MagicMock()
+    mock_response.text = html_content
+    mock_get.return_value = mock_response
+
+    client = ScraperApiTicketmasterClient(api_key="test_scraper_key")
     pricing = client.get_event_prices("https://ticketmaster.com/event")
     
-    mock_client_instance.actor.assert_called_with("parseforge/ticketmaster-scraper")
-    mock_client_instance.actor().call.assert_called_once_with(
-        run_input={
-            "startUrls": [{"url": "https://ticketmaster.com/event"}],
-            "maxItems": 100,
-            "includeResale": False
-        },
-        memory_mbytes=128
-    )
-
-    assert pricing.platform == "ticketmaster"
-    assert pricing.event_id == "https://ticketmaster.com/event"
     assert len(pricing.prices) == 0
 
-def test_get_event_prices_invalid_prices(mocker):
-    mock_apify = mocker.patch('ticket_pricing.ticketmaster.ApifyClient')
-    mock_client_instance = MagicMock()
-    mock_apify.return_value = mock_client_instance
+@patch('ticket_pricing.ticketmaster.requests.get')
+def test_scraper_api_ticketmaster_client_error(mock_get):
+    mock_get.side_effect = requests.exceptions.RequestException("API Error")
     
-    mock_client_instance.actor().call.return_value = {"defaultDatasetId": "dataset_123"}
-    mock_client_instance.dataset().iterate_items.return_value = [
-        {
-            "id": "1",
-            "url": "https://ticketmaster.com/event",
-            "price": None,
-            "currency": "USD",
-            "type": "General Admission"
-        },
-        {
-            "id": "2",
-            "url": "https://ticketmaster.com/event",
-            "price": "invalid",
-            "currency": "USD",
-            "type": "General Admission"
-        },
-        {
-            "id": "3",
-            "url": "https://ticketmaster.com/event",
-            "price": 50.0,
-            "currency": "USD",
-            "type": "General Admission"
-        }
-    ]
-    
-    client = ApifyTicketmasterClient(api_token="test_token")
+    client = ScraperApiTicketmasterClient(api_key="test_scraper_key")
     pricing = client.get_event_prices("https://ticketmaster.com/event")
     
-    mock_client_instance.actor.assert_called_with("parseforge/ticketmaster-scraper")
-    mock_client_instance.actor().call.assert_called_once_with(
-        run_input={
-            "startUrls": [{"url": "https://ticketmaster.com/event"}],
-            "maxItems": 100,
-            "includeResale": False
-        },
-        memory_mbytes=128
-    )
-
-    assert pricing.platform == "ticketmaster"
-    assert pricing.event_id == "https://ticketmaster.com/event"
-    assert len(pricing.prices) == 1
-    assert pricing.prices[0].min_price == 50.0
-
-def test_get_event_prices_resale_filtering(mocker):
-    mock_apify = mocker.patch('ticket_pricing.ticketmaster.ApifyClient')
-    mock_client_instance = MagicMock()
-    mock_apify.return_value = mock_client_instance
-    
-    mock_client_instance.actor().call.return_value = {"defaultDatasetId": "dataset_123"}
-    mock_client_instance.dataset().iterate_items.return_value = [
-        {
-            "id": "1",
-            "url": "https://ticketmaster.com/event",
-            "price": 100.0,
-            "currency": "USD",
-            "type": "Resale Ticket"
-        },
-        {
-            "id": "2",
-            "url": "https://ticketmaster.com/event",
-            "price": 150.0,
-            "currency": "USD",
-            "type": "Standard Ticket",
-            "isResale": True
-        },
-        {
-            "id": "3",
-            "url": "https://ticketmaster.com/event",
-            "price": 200.0,
-            "currency": "USD",
-            "type": None
-        },
-        {
-            "id": "4",
-            "url": "https://ticketmaster.com/event",
-            "price": 50.0,
-            "currency": "USD",
-            "type": "Standard Ticket"
-        }
-    ]
-    
-    client = ApifyTicketmasterClient(api_token="test_token")
-    pricing = client.get_event_prices("https://ticketmaster.com/event")
-    
-    mock_client_instance.actor.assert_called_with("parseforge/ticketmaster-scraper")
-    mock_client_instance.actor().call.assert_called_once_with(
-        run_input={
-            "startUrls": [{"url": "https://ticketmaster.com/event"}],
-            "maxItems": 100,
-            "includeResale": False
-        },
-        memory_mbytes=128
-    )
-
-    assert pricing.platform == "ticketmaster"
-    assert len(pricing.prices) == 2
-    assert pricing.prices[0].min_price == 200.0
-    assert pricing.prices[1].min_price == 50.0
-
-
-def test_get_event_prices_parseforge_schema(mocker):
-    mock_apify = mocker.patch('ticket_pricing.ticketmaster.ApifyClient')
-    mock_client_instance = MagicMock()
-    mock_apify.return_value = mock_client_instance
-    
-    mock_client_instance.actor().call.return_value = {"defaultDatasetId": "dataset_123"}
-    mock_client_instance.dataset().iterate_items.return_value = [
-        {
-            "id": "G5vVZ9...",
-            "url": "https://www.ticketmaster.com/event/...",
-            "name": "Example Concert",
-            "tickets": {
-                "minPrice": 50.0,
-                "maxPrice": 200.0,
-                "currency": "USD"
-            }
-        },
-        {
-            "id": "ResaleItem",
-            "url": "https://www.ticketmaster.com/event/...",
-            "name": "Resale Concert",
-            "tickets": {
-                "minPrice": 150.0,
-                "maxPrice": 300.0,
-                "currency": "USD",
-                "type": "Resale"
-            }
-        }
-    ]
-    
-    client = ApifyTicketmasterClient(api_token="test_token")
-    pricing = client.get_event_prices("https://ticketmaster.com/event")
-    
-    assert pricing.platform == "ticketmaster"
-    assert len(pricing.prices) == 1
-    assert pricing.prices[0].min_price == 50.0
-    assert pricing.prices[0].max_price == 200.0
-    assert pricing.prices[0].currency == "USD"
-
-
+    assert len(pricing.prices) == 0

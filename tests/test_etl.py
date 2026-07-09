@@ -129,7 +129,7 @@ def test_fetch_face_value_from_new_fetcher(default_mocks, db_conn, monkeypatch):
     mock_bootstrap, mock_stubhub, mock_tm, mock_sg = default_mocks
     
     # Ensure config has API tokens for the new fetcher
-    monkeypatch.setattr(config, "APIFY_API_TOKEN", "fake_apify_token")
+    monkeypatch.setattr(config, "SCRAPER_API_KEY", "fake_scraper_key")
     
     # We want TM API to NOT have price, so it falls back to fetcher
     mock_tm.return_value = {"face_value_min": None, "onsale_date": "2026-01-01", "ticketmaster_url": "url"}
@@ -152,7 +152,7 @@ def test_fetch_face_value_from_eventbrite(default_mocks, db_conn, monkeypatch):
     mock_bootstrap, mock_stubhub, mock_tm, mock_sg = default_mocks
     
     # Setup for eventbrite
-    monkeypatch.setattr(config, "APIFY_API_TOKEN", None) # Disable TM fetcher just to be safe
+    monkeypatch.setattr(config, "SCRAPER_API_KEY", None) # Disable TM fetcher just to be safe
     monkeypatch.setattr(config, "EVENTBRITE_API_TOKEN", "fake_eb_token")
     
     # Mock SeatGeek event to have eventbrite provider info
@@ -191,7 +191,7 @@ def test_fetch_face_value_missing_tokens(default_mocks, db_conn, monkeypatch):
     mock_bootstrap, mock_stubhub, mock_tm, mock_sg = default_mocks
     
     # Missing API tokens
-    monkeypatch.setattr(config, "APIFY_API_TOKEN", None)
+    monkeypatch.setattr(config, "SCRAPER_API_KEY", None)
     monkeypatch.setattr(config, "EVENTBRITE_API_TOKEN", None)
     
     # Setup SG with both TM and EB potentially available
