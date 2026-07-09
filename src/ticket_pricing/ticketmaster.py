@@ -19,8 +19,7 @@ class ScraperApiTicketmasterClient(BaseTicketClient):
             'api_key': self.api_key,
             'url': event_url,
             'render': 'true',  # TM requires JS rendering
-            'country_code': 'us',
-            'premium': 'true'  # Required for Datadome bypass
+            'country_code': 'us'
         }
         
         try:
