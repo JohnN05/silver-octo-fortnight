@@ -1,5 +1,5 @@
 {
-    "last_updated": "2026-07-09T09:00:11.007982",
+    "last_updated": "2026-07-09T18:00:11.164372",
     "events": [
         {
             "id": 18196104,
@@ -65,7 +65,7 @@
             "venue_city": "Baltimore",
             "venue_state": "MD",
             "url": "https://seatgeek.com/levity-tickets/baltimore-maryland-pier-six-pavilion-2026-07-31-7-pm/concert/18009505",
-            "resale_lowest": null,
+            "resale_lowest": 58.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -77,7 +77,7 @@
             "ticketmaster_url": "https://www.ticketmaster.com/levity-x-tape-b-present-summer-baltimore-maryland-07-31-2026/event/15006425D14B7AFE",
             "analysis_rating": "LOW",
             "analysis_roi": 0.0,
-            "estimated_resale": 0.0
+            "estimated_resale": 58.0
         },
         {
             "id": 18258870,
@@ -91,7 +91,7 @@
             "venue_city": "Washington",
             "venue_state": "DC",
             "url": "https://seatgeek.com/slander-tickets/washington-district-of-columbia-echostage-2026-07-31-10-pm/concert/18258870",
-            "resale_lowest": null,
+            "resale_lowest": 71.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -103,7 +103,7 @@
             "ticketmaster_url": "https://www.ticketmaster.com/slander-night-1-washington-district-of-columbia-07-31-2026/event/150064B2F095A518",
             "analysis_rating": "LOW",
             "analysis_roi": 0.0,
-            "estimated_resale": 0.0
+            "estimated_resale": 71.0
         },
         {
             "id": 18328601,
@@ -169,7 +169,7 @@
             "venue_city": "Washington",
             "venue_state": "DC",
             "url": "https://seatgeek.com/hugel-tickets/washington-district-of-columbia-echostage-2026-09-05-8-pm/concert/18317850",
-            "resale_lowest": null,
+            "resale_lowest": 105.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -181,7 +181,7 @@
             "ticketmaster_url": "https://www.ticketmaster.com/hugel-washington-district-of-columbia-09-05-2026/event/150064CFD186AB3D",
             "analysis_rating": "LOW",
             "analysis_roi": 0.0,
-            "estimated_resale": 0.0
+            "estimated_resale": 105.0
         },
         {
             "id": 18354682,
