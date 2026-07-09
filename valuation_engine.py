@@ -1,11 +1,11 @@
 from datetime import datetime
 
 def compute_score(event):
-    face_val = event.get("face_value", 50.0)
+    face_val = event.get("face_value")
     resale_lowest = event.get("resale_lowest")
     
     # 1. Markup / ROI Score (40% weight)
-    if resale_lowest:
+    if resale_lowest and face_val:
         roi = ((resale_lowest - face_val - (resale_lowest * 0.15)) / face_val) * 100.0
         markup_score = min(max(roi / 1.5, 0.0), 100.0) # ROI >= 150% gets 100 points
     else:

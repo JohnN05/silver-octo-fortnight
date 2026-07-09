@@ -21,8 +21,6 @@ def _extract_min_price(pricing):
 def run_daily_etl(conn):
     # Setup Fetcher
     fetcher = TicketPricingFetcher()
-    if getattr(config, 'SCRAPER_API_KEY', None):
-        fetcher.register_client("ticketmaster", ScraperApiTicketmasterClient(config.SCRAPER_API_KEY))
     if getattr(config, 'EVENTBRITE_API_TOKEN', None):
         fetcher.register_client("eventbrite", EventbriteClient(config.EVENTBRITE_API_TOKEN))
 
@@ -70,15 +68,7 @@ def run_daily_etl(conn):
             if not ticketmaster_url and event.get("provider_name") == "TICKETMASTER" and event.get("provider_id"):
                 ticketmaster_url = f"https://www.ticketmaster.com/event/{event['provider_id']}"
             
-            # If TM API didn't have price, try fetching via ScraperAPI
-            if not face_value and ticketmaster_url and getattr(config, 'SCRAPER_API_KEY', None):
-                try:
-                    pricing = fetcher.get_prices("ticketmaster", ticketmaster_url)
-                    extracted = _extract_min_price(pricing)
-                    if extracted is not None:
-                        face_value = extracted
-                except Exception as e:
-                    logging.error(f"Error fetching ticketmaster prices for {ticketmaster_url}: {e}")
+            # Removed ScraperAPI fallback. We will rely purely on the free official Discovery API.
                     
             # Check Eventbrite if SeatGeek specified it
             if not face_value and event.get("provider_name") == "EVENTBRITE" and event.get("provider_id") and getattr(config, 'EVENTBRITE_API_TOKEN', None):
@@ -91,12 +81,8 @@ def run_daily_etl(conn):
                     logging.error(f"Error fetching eventbrite prices for {event.get('provider_id')}: {e}")
         
             if not face_value:
-                # Fallback to face value estimation
-                face_value = event.get("face_value") or utils.estimate_face_value(
-                    artist_score=event["artist_score"],
-                    venue_capacity=event.get("venue_capacity"),
-                    venue_name=event.get("venue_name")
-                )
+                # Fallback to Seatgeek provided face value (if any), no estimation heuristics
+                face_value = event.get("face_value")
             event["face_value"] = face_value
             event["onsale_date"] = onsale_date
             event["ticketmaster_url"] = ticketmaster_url

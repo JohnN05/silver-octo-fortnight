@@ -30,9 +30,13 @@ def send_discord_notification(events_with_analysis):
         venue = event["venue"]
         
         # Clean concise details
-        face_val = event.get('face_value') or 0.0
-        price_details = f"Est. Face Value: ${face_val:.2f}\n"
-        est_resale = event.get('resale_average') or event.get('resale_lowest') or event.get('face_value') or 0.0
+        face_val = event.get('face_value')
+        if face_val is not None:
+            price_details = f"Face Value: ${face_val:.2f}\n"
+        else:
+            price_details = "Face Value: Unknown\n"
+            
+        est_resale = event.get('resale_average') or event.get('resale_lowest') or 0.0
         price_details += f"Estimated Resale Value: ${est_resale:.2f}"
             
         color = 0xE74C3C if analysis["rating"] == "CRITICAL" else 0x3498DB
@@ -78,9 +82,10 @@ def generate_markdown_report(events_with_analysis):
     
     for event, analysis in events_with_analysis:
         status = "On Sale" if not event.get("onsale_date") else f"Presale: {event['onsale_date']}"
-        face_val = event.get('face_value') or 0.0
+        face_val = event.get('face_value')
+        face_str = f"${face_val:.2f}" if face_val is not None else "Unknown"
         resale_val = event.get('resale_lowest') or 0.0
-        md += f"| {analysis['rating']} | {event['artist']} | {event['venue']} | {event['date']} | ${face_val:.2f} | ${resale_val:.2f} | +{analysis['roi']}% | {status} |\n"
+        md += f"| {analysis['rating']} | {event['artist']} | {event['venue']} | {event['date']} | {face_str} | ${resale_val:.2f} | +{analysis['roi']}% | {status} |\n"
         
     with open(report_path, "w") as f:
         f.write(md)

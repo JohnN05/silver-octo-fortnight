@@ -19,6 +19,7 @@ class ScraperApiTicketmasterClient(BaseTicketClient):
             'api_key': self.api_key,
             'url': event_url,
             'render': 'true',  # TM requires JS rendering
+            'premium': 'true', # TM requires premium residential proxies
             'country_code': 'us'
         }
         

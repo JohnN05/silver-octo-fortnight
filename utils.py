@@ -25,7 +25,7 @@ def estimate_face_value(artist_score: float, venue_capacity: int = None, venue_n
             if artist_score < 0.45:
                 return 47.0
             elif artist_score < 0.65:
-                return 55.0
+                return 82.50
             else:
                 return 85.0
         elif "anthem" in name_lower:

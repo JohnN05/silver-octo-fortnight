@@ -41,8 +41,19 @@ def get_ticketmaster_event_details(artist_name: str, venue_city: str) -> dict:
         
         event = events[0]
         price_ranges = event.get("priceRanges") or []
-        face_min = price_ranges[0].get("min") if price_ranges else None
-        face_max = price_ranges[0].get("max") if price_ranges else None
+        face_min = None
+        face_max = None
+        
+        # Prioritize fee-inclusive official prices if the venue provides them
+        for pr in price_ranges:
+            if "including fees" in pr.get("type", "").lower():
+                face_min = pr.get("min")
+                face_max = pr.get("max")
+                break
+                
+        if face_min is None and price_ranges:
+            face_min = price_ranges[0].get("min")
+            face_max = price_ranges[0].get("max")
         
         onsales = (event.get("sales") or {}).get("public") or {}
         onsale_date = onsales.get("startDateTime")
