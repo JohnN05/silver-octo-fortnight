@@ -1,5 +1,5 @@
 {
-    "last_updated": "2026-07-09T18:00:11.164372",
+    "last_updated": "2026-07-10T09:00:09.127949",
     "events": [
         {
             "id": 18196104,
@@ -13,7 +13,7 @@
             "venue_city": "Washington",
             "venue_state": "DC",
             "url": "https://seatgeek.com/layton-giordani-tickets/washington-district-of-columbia-echostage-2026-07-17-10-pm/concert/18196104",
-            "resale_lowest": null,
+            "resale_lowest": 57.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -25,7 +25,7 @@
             "ticketmaster_url": "https://www.ticketmaster.com/layton-giordani-360o-set-washington-district-of-columbia-07-17-2026/event/15006494DC83C461",
             "analysis_rating": "LOW",
             "analysis_roi": 0.0,
-            "estimated_resale": 0.0
+            "estimated_resale": 57.0
         },
         {
             "id": 18263379,
@@ -39,7 +39,7 @@
             "venue_city": "Baltimore",
             "venue_state": "MD",
             "url": "https://seatgeek.com/dj-diesel-tickets/baltimore-maryland-power-plant-live-2026-07-24-9-pm/concert/18263379",
-            "resale_lowest": null,
+            "resale_lowest": 51.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -51,7 +51,7 @@
             "ticketmaster_url": "https://www.ticketmaster.com/event/Z7r9jZ1A70EPx",
             "analysis_rating": "LOW",
             "analysis_roi": 0.0,
-            "estimated_resale": 0.0
+            "estimated_resale": 51.0
         },
         {
             "id": 18009505,
@@ -91,7 +91,7 @@
             "venue_city": "Washington",
             "venue_state": "DC",
             "url": "https://seatgeek.com/slander-tickets/washington-district-of-columbia-echostage-2026-07-31-10-pm/concert/18258870",
-            "resale_lowest": 71.0,
+            "resale_lowest": 89.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -100,10 +100,10 @@
             "provider_id": "150064B2F095A518",
             "announcements": {},
             "onsale_date": "2026-05-21T16:00:00Z",
-            "ticketmaster_url": "https://www.ticketmaster.com/slander-night-1-washington-district-of-columbia-07-31-2026/event/150064B2F095A518",
+            "ticketmaster_url": "https://www.ticketmaster.com/slander-night-2-washington-district-of-columbia-08-01-2026/event/150064B2F238A6B2",
             "analysis_rating": "LOW",
             "analysis_roi": 0.0,
-            "estimated_resale": 71.0
+            "estimated_resale": 89.0
         },
         {
             "id": 18328601,
@@ -117,7 +117,7 @@
             "venue_city": "Washington",
             "venue_state": "DC",
             "url": "https://seatgeek.com/virtual-riot-tickets/washington-district-of-columbia-echostage-2026-08-21-10-pm/concert/18328601",
-            "resale_lowest": null,
+            "resale_lowest": 84.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -129,7 +129,7 @@
             "ticketmaster_url": "https://www.ticketmaster.com/virtual-riot-blanke-far-from-home-washington-district-of-columbia-08-21-2026/event/150064D6B47C75B9",
             "analysis_rating": "LOW",
             "analysis_roi": 0.0,
-            "estimated_resale": 0.0
+            "estimated_resale": 84.0
         },
         {
             "id": 18345148,
@@ -143,7 +143,7 @@
             "venue_city": "Washington",
             "venue_state": "DC",
             "url": "https://seatgeek.com/william-black-tickets/washington-district-of-columbia-echostage-2026-08-29-10-pm/concert/18345148",
-            "resale_lowest": null,
+            "resale_lowest": 78.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -155,7 +155,7 @@
             "ticketmaster_url": "https://www.ticketmaster.com/william-black-the-shadow-realm-tour-washington-district-of-columbia-08-29-2026/event/150064DCED1AA001",
             "analysis_rating": "LOW",
             "analysis_roi": 0.0,
-            "estimated_resale": 0.0
+            "estimated_resale": 78.0
         },
         {
             "id": 18317850,
@@ -208,6 +208,32 @@
             "analysis_rating": "LOW",
             "analysis_roi": 0.0,
             "estimated_resale": 0.0
+        },
+        {
+            "id": 18232063,
+            "title": "Channel Tres",
+            "artist": "Channel Tres",
+            "artist_id": 704430,
+            "artist_score": 0.5,
+            "date": "2026-09-07T19:00:00",
+            "venue": "9:30 Club (Washington, DC)",
+            "venue_name": "9:30 Club",
+            "venue_city": "Washington",
+            "venue_state": "DC",
+            "url": "https://seatgeek.com/channel-tres-tickets/washington-district-of-columbia-9-30-club-2026-09-07-7-pm/concert/18232063",
+            "resale_lowest": 50.0,
+            "resale_highest": null,
+            "resale_average": null,
+            "resale_count": 0,
+            "face_value": null,
+            "provider_name": null,
+            "provider_id": null,
+            "announcements": {},
+            "onsale_date": "2026-05-14T14:00:00Z",
+            "ticketmaster_url": "https://www.ticketmaster.com/channel-tres-the-enigma-tour-washington-district-of-columbia-09-07-2026/event/150064A4C675D152",
+            "analysis_rating": "LOW",
+            "analysis_roi": 0.0,
+            "estimated_resale": 50.0
         }
     ]
 }
