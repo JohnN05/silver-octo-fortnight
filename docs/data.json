@@ -1,5 +1,5 @@
 {
-    "last_updated": "2026-07-10T09:00:09.127949",
+    "last_updated": "2026-07-10T18:00:15.514729",
     "events": [
         {
             "id": 18196104,
@@ -13,7 +13,7 @@
             "venue_city": "Washington",
             "venue_state": "DC",
             "url": "https://seatgeek.com/layton-giordani-tickets/washington-district-of-columbia-echostage-2026-07-17-10-pm/concert/18196104",
-            "resale_lowest": 57.0,
+            "resale_lowest": 71.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -25,7 +25,7 @@
             "ticketmaster_url": "https://www.ticketmaster.com/layton-giordani-360o-set-washington-district-of-columbia-07-17-2026/event/15006494DC83C461",
             "analysis_rating": "LOW",
             "analysis_roi": 0.0,
-            "estimated_resale": 57.0
+            "estimated_resale": 71.0
         },
         {
             "id": 18263379,
