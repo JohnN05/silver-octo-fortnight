@@ -1,5 +1,5 @@
 {
-    "last_updated": "2026-07-11T09:00:10.999966",
+    "last_updated": "2026-07-11T18:00:07.476307",
     "events": [
         {
             "id": 18196104,
@@ -39,7 +39,7 @@
             "venue_city": "Baltimore",
             "venue_state": "MD",
             "url": "https://seatgeek.com/dj-diesel-tickets/baltimore-maryland-power-plant-live-2026-07-24-9-pm/concert/18263379",
-            "resale_lowest": 62.0,
+            "resale_lowest": 63.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -51,7 +51,7 @@
             "ticketmaster_url": "https://www.ticketmaster.com/event/Z7r9jZ1A70EPx",
             "analysis_rating": "LOW",
             "analysis_roi": 0.0,
-            "estimated_resale": 62.0
+            "estimated_resale": 63.0
         },
         {
             "id": 18009505,
@@ -65,7 +65,7 @@
             "venue_city": "Baltimore",
             "venue_state": "MD",
             "url": "https://seatgeek.com/levity-tickets/baltimore-maryland-pier-six-pavilion-2026-07-31-7-pm/concert/18009505",
-            "resale_lowest": 60.0,
+            "resale_lowest": 64.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -77,7 +77,7 @@
             "ticketmaster_url": "https://www.ticketmaster.com/levity-x-tape-b-present-summer-baltimore-maryland-07-31-2026/event/15006425D14B7AFE",
             "analysis_rating": "LOW",
             "analysis_roi": 0.0,
-            "estimated_resale": 60.0
+            "estimated_resale": 64.0
         },
         {
             "id": 18258870,
@@ -91,7 +91,7 @@
             "venue_city": "Washington",
             "venue_state": "DC",
             "url": "https://seatgeek.com/slander-tickets/washington-district-of-columbia-echostage-2026-07-31-10-pm/concert/18258870",
-            "resale_lowest": 89.0,
+            "resale_lowest": 63.0,
             "resale_highest": null,
             "resale_average": null,
             "resale_count": 0,
@@ -103,7 +103,7 @@
             "ticketmaster_url": "https://www.ticketmaster.com/slander-night-2-washington-district-of-columbia-08-01-2026/event/150064B2F238A6B2",
             "analysis_rating": "LOW",
             "analysis_roi": 0.0,
-            "estimated_resale": 89.0
+            "estimated_resale": 63.0
         },
         {
             "id": 18328601,
